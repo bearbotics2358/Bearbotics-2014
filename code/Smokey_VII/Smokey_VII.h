@@ -13,6 +13,7 @@ class IterativeRobot;
 class DigitalInput;
 
 class Aimerino;
+class Shooter;
 
 class Smokey_VII : public IterativeRobot{
 public:
@@ -34,9 +35,8 @@ private:
 	Talon* ap_BRmotor;
 	Talon* ap_CollectorMotor;
 //	RobotDrive* ap_Drive;
-	Talon* ap_Shooter;
 	Aimerino* ap_Aimer;
-	DigitalInput* ap_MagSensor;
+	Shooter* ap_Shooter;
 };
 
 #endif 

@@ -1,15 +1,15 @@
-#include "Prefs.h"
-#include "Aimerino.h"
-
-#include "IterativeRobot.h"
-#include "RobotBase.h"
-#include "Gyro.h"
-#include "Talon.h"
-#include "Joystick.h"
-#include "RobotDrive.h"
-#include "DigitalInput.h"
+#include <IterativeRobot.h>
+#include <Gyro.h>
+#include <Talon.h>
+#include <Joystick.h>
+#include <RobotDrive.h>
+#include <DigitalInput.h>
 
 #include "Smokey_VII.h"
+
+#include "Prefs.h"
+#include "Aimerino.h"
+#include "Shooter.h"
 
 Smokey_VII::Smokey_VII(void){
 	ap_Gyro = new Gyro(GYRO_PORT);
@@ -22,9 +22,9 @@ Smokey_VII::Smokey_VII(void){
 //	ap_Drive->SetInvertedMotor(ap_Drive->kFrontRightMotor, true);
 //	ap_Drive->SetInvertedMotor(ap_Drive->kRearRightMotor, true);
 	ap_CollectorMotor = new Talon(COLLECTOR_PORT);
-	ap_Shooter = new Talon(SHOOTER_PORT);
 	ap_Aimer = new Aimerino(AIMER_PORT, POT_PORT, 90.0 / (4.77 - 3.03), 3.03);
-	ap_MagSensor = new DigitalInput(1);
+
+	ap_Shooter = new Shooter(SHOOTER_PORT, 1);
 }
 
 Smokey_VII::~Smokey_VII(void){
@@ -44,12 +44,10 @@ Smokey_VII::~Smokey_VII(void){
 //	ap_Drive = NULL;
 	delete ap_CollectorMotor;
 	ap_CollectorMotor = NULL;
-	delete ap_Shooter;
-	ap_Shooter = NULL;
 	delete ap_Aimer;
 	ap_Aimer = NULL;
-	delete ap_MagSensor;
-	ap_MagSensor = NULL;
+	delete ap_Shooter;
+	ap_Shooter = NULL;
 }
 
 void Smokey_VII::RobotInit(void){
@@ -91,16 +89,15 @@ void Smokey_VII::TeleopPeriodic(void){
 	else if(negative) ap_CollectorMotor->Set(-0.6);	
 	else ap_CollectorMotor->Set(0);
 	
-	static bool shooting;
-	if(ap_MagSensor->Get() == 0) shooting = false;
-	if(ap_Joystick->GetRawButton(1)) shooting = true;
-	(shooting) ? ap_Shooter->Set(1.0) : ap_Shooter->Set(0.0);
-		
-	printf("MagSensor: %d\n", ap_MagSensor->Get());
+	// static bool shooting;
+	// if(ap_MagSensor->Get() == 0) shooting = false;
+	// if(ap_Joystick->GetRawButton(1)) shooting = true;
+	// (shooting) ? ap_Shooter->Set(1.0) : ap_Shooter->Set(0.0);
+	// printf("MagSensor: %d\n", ap_MagSensor->Get());
+	ap_Shooter->Update(*ap_Joystick);
 
 	if(ap_Joystick->GetRawButton(2)) ap_Aimer->setEnabled(false);
 	if(ap_Joystick->GetRawButton(6)) ap_Aimer->setEnabled(true);
-	
 }
 
 void Smokey_VII::TestPeriodic(void)
