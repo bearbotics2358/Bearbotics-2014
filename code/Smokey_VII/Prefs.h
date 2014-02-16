@@ -1,0 +1,31 @@
+#ifndef PREFS_H
+#define PREFS_H
+
+#define POT_PORT 2
+#define MAG_SENSOR_PORT 1
+#define GYRO_PORT 3
+
+#define FL_PORT 7
+#define FR_PORT 4
+#define BL_PORT 5
+#define BR_PORT 2
+#define SHOOTER_PORT 3
+#define COLLECTOR_PORT 1
+#define AIMER_PORT 6
+
+#define JOYSTICK_PORT 1
+
+#define COLLECTOR_SPEED 0.5
+#define CRANK_SPEED 0.5
+#define AIM_SPEED 0.1
+
+#define COLLECTOR_POSITIVE_BUTTON 5
+#define COLLECTOR_NEGATIVE_BUTTON 3
+#define AUTO_COCK_BUTTON 11
+#define CANCEL_COCK_BUTTON 11
+#define MANUAL_COCK_POSITIVE_BUTTON 6
+#define MANUAL_COCK_NEGATIVE_BUTTON 4
+#define POSITIVE_AIM_BUTTON 10
+#define NEGATIVE_AIM_BUTTON 9
+
+#endif
