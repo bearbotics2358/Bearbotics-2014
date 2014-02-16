@@ -1,5 +1,5 @@
-#define SMOKEY_VII_H
 #ifndef SMOKEY_VII_H
+#define SMOKEY_VII_H
 
 #define SMOKEY_MAJOR_VERSION 7
 #define SMOKEY_MINOR_VERSION 1
