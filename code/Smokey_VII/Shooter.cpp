@@ -5,7 +5,7 @@
 #include <Talon.h>
 
 Shooter::Shooter(unsigned int motorPort, unsigned int stopSensorPort)
-	: a_state(SHOOTER_STATE_IDLE), a_reArm(true)
+	: a_state(SHOOTER_STATE_IDLE), a_stopSensorState(true), a_reArm(true)
 {
 	ap_motor = new Talon(motorPort);
 	ap_stopSensor = new DigitalInput(stopSensorPort);
@@ -20,7 +20,7 @@ Shooter::~Shooter(void)
 	ap_stopSensor = NULL;
 }
 
-void Shooter::Update(Joystick &stick)
+void Shooter::UpdateControlLogic(Joystick &stick)
 {
 	ShooterState_t nextState = a_state;
 
@@ -35,7 +35,7 @@ void Shooter::Update(Joystick &stick)
 			break;
 		case SHOOTER_STATE_ARMING:
 			ap_motor->Set(1.0);
-			if(ap_stopSensor->Get())
+			if(!a_stopSensorState)
 			{
 				nextState = SHOOTER_STATE_ARMED;
 			}
@@ -55,7 +55,7 @@ void Shooter::Update(Joystick &stick)
 			break;
 		case SHOOTER_STATE_SHOOTING:
 			ap_motor->Set(1.0);
-			if(!ap_stopSensor->Get())
+			if(a_stopSensorState)
 			{
 				if(a_reArm)
 				{
@@ -71,10 +71,15 @@ void Shooter::Update(Joystick &stick)
 
 	a_state = nextState;
 
+}
+
+void Shooter::UpdateSensors(void)
+{
+	a_stopSensorState = ap_stopSensor->Get();
 	// Logging
 	if(a_verbose)
 	{
-		printf("Arm sensor: %d\n", ap_stopSensor->Get());
+		printf("Arm sensor: %d\n", a_stopSensorState);
 	}
 }
 

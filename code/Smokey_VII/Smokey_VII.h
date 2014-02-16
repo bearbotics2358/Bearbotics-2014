@@ -15,13 +15,18 @@ class DigitalInput;
 class Aimerino;
 class Shooter;
 
-class Smokey_VII : public IterativeRobot{
+class Smokey_VII : public IterativeRobot
+{
 public:
 	Smokey_VII(void);
 	~Smokey_VII(void);
+
 	void RobotInit(void);
+
 	void TeleopInit(void);
 	void TeleopPeriodic(void);
+	void TeleopContinuous(void);
+
 	void TestPeriodic(void);
 	
 private:

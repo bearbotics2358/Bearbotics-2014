@@ -24,10 +24,12 @@ Smokey_VII::Smokey_VII(void){
 	ap_CollectorMotor = new Talon(COLLECTOR_PORT);
 	ap_Aimer = new Aimerino(AIMER_PORT, POT_PORT, 90.0 / (4.77 - 3.03), 3.03);
 
-	ap_Shooter = new Shooter(SHOOTER_PORT, 1);
+	ap_Shooter = new Shooter(SHOOTER_PORT, MAG_SENSOR_PORT);
+	ap_Shooter->SetVerbose(true);
 }
 
-Smokey_VII::~Smokey_VII(void){
+Smokey_VII::~Smokey_VII(void)
+{
 	delete ap_Gyro;
 	ap_Gyro = NULL;
 	delete ap_Joystick;
@@ -73,7 +75,7 @@ void Smokey_VII::TeleopPeriodic(void){
        .5 * ap_Joystick->GetZ(), 
             ap_Gyro->GetAngle());
 	*/
-	printf("Angle: %f\t", ap_Aimer->getAngle());
+	printf("Angle: %f\n", ap_Aimer->getAngle());
 	if(ap_Joystick->GetRawButton(7)) ap_Aimer->setAngle(Aimerino::DOWN);
 	if(ap_Joystick->GetRawButton(8)) ap_Aimer->setAngle(Aimerino::PARALLEL);
 	if(ap_Joystick->GetRawButton(9)) ap_Aimer->setAngle(Aimerino::BELOWSHOOT);
@@ -94,10 +96,15 @@ void Smokey_VII::TeleopPeriodic(void){
 	// if(ap_Joystick->GetRawButton(1)) shooting = true;
 	// (shooting) ? ap_Shooter->Set(1.0) : ap_Shooter->Set(0.0);
 	// printf("MagSensor: %d\n", ap_MagSensor->Get());
-	ap_Shooter->Update(*ap_Joystick);
+	ap_Shooter->UpdateSensors();
+	ap_Shooter->UpdateControlLogic(*ap_Joystick);
 
 	if(ap_Joystick->GetRawButton(2)) ap_Aimer->setEnabled(false);
 	if(ap_Joystick->GetRawButton(6)) ap_Aimer->setEnabled(true);
+}
+
+void Smokey_VII::TeleopContinuous(void)
+{
 }
 
 void Smokey_VII::TestPeriodic(void)

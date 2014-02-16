@@ -19,7 +19,8 @@ public:
 	Shooter(unsigned int motorPort, unsigned int stopSensorPort);
 	~Shooter(void);
 
-	void Update(Joystick &stick);
+	void UpdateControlLogic(Joystick &stick);
+	void UpdateSensors(void);
 
 	bool GetVerbose(void);
 	void SetVerbose(bool verbose);
@@ -29,6 +30,7 @@ private:
 	DigitalInput *ap_stopSensor;
 
 	ShooterState_t a_state;
+	bool a_stopSensorState;
 	bool a_reArm;
 
 	bool a_verbose;
