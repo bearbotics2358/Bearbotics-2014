@@ -3,12 +3,14 @@
 #include <DigitalInput.h>
 #include <Joystick.h>
 #include <Talon.h>
+#include <Counter.h>
 
 Shooter::Shooter(unsigned int motorPort, unsigned int stopSensorPort)
 	: a_state(SHOOTER_STATE_IDLE), a_stopSensorState(true), a_reArm(true)
 {
 	ap_motor = new Talon(motorPort);
 	ap_stopSensor = new DigitalInput(stopSensorPort);
+	ap_counter = new Counter(ap_stopSensor);
 }
 
 Shooter::~Shooter(void)
@@ -18,6 +20,14 @@ Shooter::~Shooter(void)
 
 	delete ap_stopSensor;
 	ap_stopSensor = NULL;
+
+	delete ap_counter;
+	ap_counter = NULL;
+}
+
+void Shooter::Enable(void)
+{
+	ap_counter->Start();
 }
 
 void Shooter::UpdateControlLogic(Joystick &stick)
@@ -28,41 +38,38 @@ void Shooter::UpdateControlLogic(Joystick &stick)
 	{
 		case SHOOTER_STATE_IDLE:
 			ap_motor->Set(0.0);
-			if(stick.GetRawButton(1))
-			{
+			if(stick.GetRawButton(1)) {
+				ap_counter->Reset();
 				nextState = SHOOTER_STATE_ARMING;
 			}
 			break;
 		case SHOOTER_STATE_ARMING:
 			ap_motor->Set(1.0);
-			if(!a_stopSensorState)
-			{
-				nextState = SHOOTER_STATE_ARMED;
+			if(ap_counter->Get() > 0) {
+				nextState = SHOOTER_STATE_IDLE;
 			}
 			break;
 		case SHOOTER_STATE_ARMED:
 			ap_motor->Set(0.0);
-			if(stick.GetRawButton(1))
-			{
+			if(stick.GetRawButton(1)) {
+				ap_counter->Reset();
 				nextState = SHOOTER_STATE_SHOOTING;
 				a_reArm = true;
 			}
-			if(stick.GetRawButton(4))
-			{
+			if(stick.GetRawButton(4)) {
+				ap_counter->Reset();
 				nextState = SHOOTER_STATE_SHOOTING;
 				a_reArm = false;
 			}
 			break;
 		case SHOOTER_STATE_SHOOTING:
 			ap_motor->Set(1.0);
-			if(a_stopSensorState)
+			if(ap_counter->Get() > 0)
 			{
-				if(a_reArm)
-				{
+				ap_counter->Reset();
+				if(a_reArm) {
 					nextState = SHOOTER_STATE_ARMING;
-				}
-				else
-				{
+				} else {
 					nextState = SHOOTER_STATE_IDLE;
 				}
 			}
@@ -70,17 +77,9 @@ void Shooter::UpdateControlLogic(Joystick &stick)
 	}
 
 	a_state = nextState;
+	
+	printf("State: %d\n", ap_counter->Get());
 
-}
-
-void Shooter::UpdateSensors(void)
-{
-	a_stopSensorState = ap_stopSensor->Get();
-	// Logging
-	if(a_verbose)
-	{
-		printf("Arm sensor: %d\n", a_stopSensorState);
-	}
 }
 
 bool Shooter::GetVerbose(void)

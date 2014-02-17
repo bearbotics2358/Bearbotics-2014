@@ -4,6 +4,7 @@
 class Talon;
 class DigitalInput;
 class Joystick;
+class Counter;
 
 typedef enum
 {
@@ -19,8 +20,8 @@ public:
 	Shooter(unsigned int motorPort, unsigned int stopSensorPort);
 	~Shooter(void);
 
+	void Enable();
 	void UpdateControlLogic(Joystick &stick);
-	void UpdateSensors(void);
 
 	bool GetVerbose(void);
 	void SetVerbose(bool verbose);
@@ -28,7 +29,9 @@ public:
 private:
 	Talon *ap_motor;
 	DigitalInput *ap_stopSensor;
-
+	Counter *ap_counter;
+	
+	
 	ShooterState_t a_state;
 	bool a_stopSensorState;
 	bool a_reArm;

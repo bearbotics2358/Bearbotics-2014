@@ -42,6 +42,7 @@ private:
 //	RobotDrive* ap_Drive;
 	Aimerino* ap_Aimer;
 	Shooter* ap_Shooter;
+	Talon* ap_CallibratingMotor;
 };
 
 #endif 

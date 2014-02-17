@@ -26,6 +26,8 @@ Smokey_VII::Smokey_VII(void){
 
 	ap_Shooter = new Shooter(SHOOTER_PORT, MAG_SENSOR_PORT);
 	ap_Shooter->SetVerbose(true);
+
+	// ap_CallibratingMotor = new Talon(7);
 }
 
 Smokey_VII::~Smokey_VII(void)
@@ -50,6 +52,7 @@ Smokey_VII::~Smokey_VII(void)
 	ap_Aimer = NULL;
 	delete ap_Shooter;
 	ap_Shooter = NULL;
+	delete ap_CallibratingMotor;
 }
 
 void Smokey_VII::RobotInit(void){
@@ -64,6 +67,7 @@ void Smokey_VII::TeleopInit(void)
 	printf("Teleop Init");
 	ap_Aimer->setEnabled(true);
 	ap_Aimer->setAngle(45);
+	ap_Shooter->Enable();
 }
 
 void Smokey_VII::TeleopPeriodic(void){
@@ -75,6 +79,19 @@ void Smokey_VII::TeleopPeriodic(void){
        .5 * ap_Joystick->GetZ(), 
             ap_Gyro->GetAngle());
 	*/
+	
+	/* Calibration Routine
+	if(ap_Joystick->GetRawButton(1))
+	{
+		ap_CallibratingMotor->Set(0);
+	}
+	else
+	{
+		ap_CallibratingMotor->Set(ap_Joystick->GetY());
+	}
+	printf("%f\n", ap_CallibratingMotor->Get());
+	*/
+	
 	printf("Angle: %f\n", ap_Aimer->getAngle());
 	if(ap_Joystick->GetRawButton(7)) ap_Aimer->setAngle(Aimerino::DOWN);
 	if(ap_Joystick->GetRawButton(8)) ap_Aimer->setAngle(Aimerino::PARALLEL);
@@ -96,7 +113,6 @@ void Smokey_VII::TeleopPeriodic(void){
 	// if(ap_Joystick->GetRawButton(1)) shooting = true;
 	// (shooting) ? ap_Shooter->Set(1.0) : ap_Shooter->Set(0.0);
 	// printf("MagSensor: %d\n", ap_MagSensor->Get());
-	ap_Shooter->UpdateSensors();
 	ap_Shooter->UpdateControlLogic(*ap_Joystick);
 
 	if(ap_Joystick->GetRawButton(2)) ap_Aimer->setEnabled(false);
@@ -109,10 +125,8 @@ void Smokey_VII::TeleopContinuous(void)
 
 void Smokey_VII::TestPeriodic(void)
 {
-/*	if(ap_Joystick->GetRawButton(1)) ap_Aimer->Set(0);
-	else ap_Aimer->Set(ap_Joystick->GetY());
-	printf("%f\n", ap_Aimer->Get());
-*/
+	
+
 }
 
 START_ROBOT_CLASS(Smokey_VII);
