@@ -11,6 +11,7 @@ class Gyro;
 class RobotBase;
 class IterativeRobot;
 class DigitalInput;
+class Sonar;
 
 class Aimerino;
 class Shooter;
@@ -42,6 +43,8 @@ private:
 	Aimerino* ap_Aimer;
 	Shooter* ap_Shooter;
 	Talon* ap_CallibratingMotor;
+	Sonar* ap_Sonars;
+
 };
 
 #endif 
