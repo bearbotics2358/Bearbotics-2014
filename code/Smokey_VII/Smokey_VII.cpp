@@ -10,6 +10,7 @@
 #include "Prefs.h"
 #include "Aimerino.h"
 #include "Shooter.h"
+#include "Sonar.h"
 
 Smokey_VII::Smokey_VII(void){
 	ap_Gyro = new Gyro(GYRO_PORT);
@@ -26,6 +27,7 @@ Smokey_VII::Smokey_VII(void){
 
 	ap_Shooter = new Shooter(SHOOTER_PORT, MAG_SENSOR_PORT);
 	ap_Shooter->SetVerbose(true);
+	ap_Sonars = new Sonar(SONAR_BAUD_RATE);
 
 	// ap_CallibratingMotor = new Talon(7);
 }
@@ -53,6 +55,8 @@ Smokey_VII::~Smokey_VII(void)
 	delete ap_Shooter;
 	ap_Shooter = NULL;
 	delete ap_CallibratingMotor;
+	delete ap_Sonars;
+	ap_Sonars = NULL;
 }
 
 void Smokey_VII::RobotInit(void){
@@ -68,10 +72,13 @@ void Smokey_VII::TeleopInit(void)
 	ap_Aimer->setEnabled(true);
 	ap_Aimer->setAngle(45);
 	ap_Shooter->Enable();
+	ap_Sonars->EnableFrontOnly();
 }
 
 void Smokey_VII::TeleopPeriodic(void){
 
+	ap_Sonars->Periodic();
+	printf("Front Left Sonar %f ft\n", ap_Sonars->GetFeet(kLeftFront));
 /*	if(ap_Joystick->GetRawButton(4)) ap_Gyro->Reset();
 	ap_Drive->MecanumDrive_Cartesian(
 	   .5 * ap_Joystick->GetX(), 

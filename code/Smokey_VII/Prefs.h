@@ -28,4 +28,6 @@
 #define POSITIVE_AIM_BUTTON 10
 #define NEGATIVE_AIM_BUTTON 9
 
+#define SONAR_BAUD_RATE 38400
+
 #endif

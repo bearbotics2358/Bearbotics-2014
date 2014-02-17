@@ -12,6 +12,7 @@ Sonar::Sonar(int baud)
 	int i;
 
 	sport = new SerialPort(baud);
+	sport->SetWriteBufferMode(kFlushOnAccess);
 	rx_index = 0;
 	for(i = 0; i < BUFF_SIZE; i++) {
 		rx_buff[i] = 0;
@@ -76,14 +77,14 @@ float Sonar::GetFeet(int port)
 	return ((float)range[i])/(2.54 * 12.0);
 }
 
-float Sonar::GetDistanceGoal()
+float Sonar::GetDistanceFront()
 {
-	return GetFeet(LEFT_FRONT);
+	return GetFeet(kLeftFront);
 }
 
-float Sonar::GetDistanceDriver()
+float Sonar::GetDistanceRear()
 {
-	return GetFeet(REAR);
+	return GetFeet(kRear);
 }
 
 Sonar::EnablePort(int port)
@@ -108,17 +109,17 @@ Sonar::DisablePort(int port)
 
 Sonar::EnableFrontOnly()
 {
-	EnablePort(LEFT_FRONT);
-	EnablePort(RIGHT_FRONT);
-	DisablePort(REAR);
-	DisablePort(4);
+	EnablePort(kLeftFront);
+	EnablePort(kRightFront);
+	DisablePort(kRear);
+	DisablePort(kNone);
 }
 
 Sonar::EnableRearOnly()
 {
-	DisablePort(LEFT_FRONT);
-	DisablePort(RIGHT_FRONT);
-	EnablePort(REAR);
-	DisablePort(4);
+	DisablePort(kLeftFront);
+	DisablePort(kRightFront);
+	EnablePort(kRear);
+	DisablePort(kNone);
 }
 

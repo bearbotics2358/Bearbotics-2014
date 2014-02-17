@@ -10,15 +10,18 @@
 
 #include <SerialPort.h>
 
-#define BUFF_SIZE 100
-#define LEFT_FRONT 0
-#define RIGHT_FRONT 1
-#define REAR 2
+#define SONAR_BUFF_SIZE 100
 
 class Sonar
 {
  public:
 
+	typedef enum{
+		kLeftFront = 0,
+		kRightFront = 1,
+		kRear = 2,
+		kNone = 3,
+	} SensorEnum;
 	Sonar(int baud);
 	~Sonar() {}
 
@@ -34,7 +37,7 @@ class Sonar
 
  private:
 	SerialPort sport;
-	char rx_buff[BUFF_SIZE];
+	char rx_buff[SONAR_BUFF_SIZE];
 	int range[4];
 } ;
 
