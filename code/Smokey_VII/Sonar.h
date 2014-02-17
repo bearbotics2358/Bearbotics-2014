@@ -25,20 +25,21 @@ class Sonar
 	Sonar(int baud);
 	~Sonar() {}
 
-	periodic();
-	int GetCM(int port);
-	float GetFeet(int port);
-	float GetDistanceGoal();
-	float GetDistanceDriver();
-	EnablePort(int port);
-	DisablePort(int port);
-	EnableFrontOnly();
-	EnableRearOnly();
+	void periodic();
+	int GetCM(SensorEnum port);
+	float GetFeet(SensorEnum port);
+	float GetDistanceFront();
+	float GetDistanceRear();
+	void EnablePort(SensorEnum port);
+	void DisablePort(SensorEnum port);
+	void EnableFrontOnly();
+	void EnableRearOnly();
 
  private:
-	SerialPort sport;
+	SerialPort* sport;
 	char rx_buff[SONAR_BUFF_SIZE];
 	int range[4];
+	int rx_index;
 } ;
 
 #endif

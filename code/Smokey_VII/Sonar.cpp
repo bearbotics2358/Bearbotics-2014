@@ -5,6 +5,7 @@
 
 */
 
+#include "Sonar.h"
 #include <stdlib.h> // atoi
 
 Sonar::Sonar(int baud)
@@ -12,14 +13,14 @@ Sonar::Sonar(int baud)
 	int i;
 
 	sport = new SerialPort(baud);
-	sport->SetWriteBufferMode(kFlushOnAccess);
+	sport->SetWriteBufferMode(SerialPort::kFlushOnAccess);
 	rx_index = 0;
-	for(i = 0; i < BUFF_SIZE; i++) {
+	for(i = 0; i < SONAR_BUFF_SIZE; i++) {
 		rx_buff[i] = 0;
 	}
 }
 
-Sonar::periodic()
+void Sonar::periodic()
 {
 	// call this routine periodically to check for any readings and store
 	// into result registers
@@ -60,21 +61,21 @@ Sonar::periodic()
     } else {
       rx_index++;
 			// should never happen
-			if(rx_index >= BUFF_LENGTH) {
+			if(rx_index >= SONAR_BUFF_SIZE) {
 				rx_index = 0;
 			}
     }
   }
 }  
 
-int Sonar::GetCM(int port)
+int Sonar::GetCM(SensorEnum port)
 {
-	return range[i];
+	return range[port];
 }
 
-float Sonar::GetFeet(int port)
+float Sonar::GetFeet(SensorEnum port)
 {
-	return ((float)range[i])/(2.54 * 12.0);
+	return ((float)range[port])/(2.54 * 12.0);
 }
 
 float Sonar::GetDistanceFront()
@@ -87,7 +88,7 @@ float Sonar::GetDistanceRear()
 	return GetFeet(kRear);
 }
 
-Sonar::EnablePort(int port)
+void Sonar::EnablePort(SensorEnum port)
 {
 	char cmd[3];
 	cmd[0] = 'A' + port;
@@ -97,7 +98,7 @@ Sonar::EnablePort(int port)
 	sport->Flush();
 }
 
-Sonar::DisablePort(int port)
+void Sonar::DisablePort(SensorEnum port)
 {
 	char cmd[3];
 	cmd[0] = 'A' + port;
@@ -107,7 +108,7 @@ Sonar::DisablePort(int port)
 	sport->Flush();
 }
 
-Sonar::EnableFrontOnly()
+void Sonar::EnableFrontOnly()
 {
 	EnablePort(kLeftFront);
 	EnablePort(kRightFront);
@@ -115,7 +116,7 @@ Sonar::EnableFrontOnly()
 	DisablePort(kNone);
 }
 
-Sonar::EnableRearOnly()
+void Sonar::EnableRearOnly()
 {
 	DisablePort(kLeftFront);
 	DisablePort(kRightFront);
