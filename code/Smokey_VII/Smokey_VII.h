@@ -26,7 +26,6 @@ public:
 	void TeleopInit(void);
 	void TeleopPeriodic(void);
 	void TeleopContinuous(void);
-
 	void TestPeriodic(void);
 	
 private:

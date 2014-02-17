@@ -7,7 +7,7 @@
 
 #include "Smokey_VII.h"
 
-#include "Prefs.h"
+#include "CompPrefs.h"
 #include "Aimerino.h"
 #include "Shooter.h"
 
@@ -27,7 +27,7 @@ Smokey_VII::Smokey_VII(void){
 	ap_Shooter = new Shooter(SHOOTER_PORT, MAG_SENSOR_PORT);
 	ap_Shooter->SetVerbose(true);
 
-	// ap_CallibratingMotor = new Talon(7);
+	ap_CallibratingMotor = new Talon(10);
 }
 
 Smokey_VII::~Smokey_VII(void)
@@ -66,21 +66,13 @@ void Smokey_VII::TeleopInit(void)
 {
 	printf("Teleop Init");
 	ap_Aimer->setEnabled(true);
-	ap_Aimer->setAngle(45);
+	//ap_Aimer->setAngle(45);
 	ap_Shooter->Enable();
 }
 
 void Smokey_VII::TeleopPeriodic(void){
 
-/*	if(ap_Joystick->GetRawButton(4)) ap_Gyro->Reset();
-	ap_Drive->MecanumDrive_Cartesian(
-	   .5 * ap_Joystick->GetX(), 
-	   .5 * ap_Joystick->GetY(),
-       .5 * ap_Joystick->GetZ(), 
-            ap_Gyro->GetAngle());
-	*/
-	
-	/* Calibration Routine
+	// Calibration Routine
 	if(ap_Joystick->GetRawButton(1))
 	{
 		ap_CallibratingMotor->Set(0);
@@ -90,9 +82,17 @@ void Smokey_VII::TeleopPeriodic(void){
 		ap_CallibratingMotor->Set(ap_Joystick->GetY());
 	}
 	printf("%f\n", ap_CallibratingMotor->Get());
+		
+	
+/*	if(ap_Joystick->GetRawButton(4)) ap_Gyro->Reset();
+	ap_Drive->MecanumDrive_Cartesian(
+	   .5 * ap_Joystick->GetX(), 
+	   .5 * ap_Joystick->GetY(),
+       .5 * ap_Joystick->GetZ(), 
+            ap_Gyro->GetAngle());
 	*/
 	
-	printf("Angle: %f\n", ap_Aimer->getAngle());
+/*	printf("Angle: %f\n", ap_Aimer->getAngle());
 	if(ap_Joystick->GetRawButton(7)) ap_Aimer->setAngle(Aimerino::DOWN);
 	if(ap_Joystick->GetRawButton(8)) ap_Aimer->setAngle(Aimerino::PARALLEL);
 	if(ap_Joystick->GetRawButton(9)) ap_Aimer->setAngle(Aimerino::BELOWSHOOT);
@@ -117,7 +117,7 @@ void Smokey_VII::TeleopPeriodic(void){
 
 	if(ap_Joystick->GetRawButton(2)) ap_Aimer->setEnabled(false);
 	if(ap_Joystick->GetRawButton(6)) ap_Aimer->setEnabled(true);
-}
+*/}
 
 void Smokey_VII::TeleopContinuous(void)
 {
@@ -125,8 +125,8 @@ void Smokey_VII::TeleopContinuous(void)
 
 void Smokey_VII::TestPeriodic(void)
 {
-	
 
+	
 }
 
 START_ROBOT_CLASS(Smokey_VII);
