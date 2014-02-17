@@ -5,8 +5,8 @@
 #define MAG_SENSOR_PORT 1
 #define GYRO_PORT 3
 
-#define FL_PORT 5
-#define FR_PORT 4
+#define FL_PORT 4
+#define FR_PORT 5
 #define BL_PORT 1
 #define BR_PORT 2
 #define SHOOTER_PORT 7
