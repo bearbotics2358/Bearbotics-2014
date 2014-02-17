@@ -28,6 +28,8 @@ public:
 	void TeleopPeriodic(void);
 	void TeleopContinuous(void);
 	void TestPeriodic(void);
+
+	void DisabledInit(void);
 	
 private:
 	int time;
@@ -39,7 +41,7 @@ private:
 	Talon* ap_BLmotor;
 	Talon* ap_BRmotor;
 	Talon* ap_CollectorMotor;
-//	RobotDrive* ap_Drive;
+	RobotDrive* ap_Drive;
 	Aimerino* ap_Aimer;
 	Shooter* ap_Shooter;
 	Talon* ap_CallibratingMotor;

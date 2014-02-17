@@ -25,13 +25,19 @@ Shooter::~Shooter(void)
 	ap_counter = NULL;
 }
 
-void Shooter::Enable(void)
+void Shooter::Init(bool enable)
 {
-	ap_counter->Start();
+	enable ? ap_counter->Start() : ap_counter->Stop();
+}
+
+void Shooter::SetEnabled(bool enable)
+{
+	a_enabled = enable;
 }
 
 void Shooter::UpdateControlLogic(Joystick &stick)
 {
+	if(a_enabled){
 	ShooterState_t nextState = a_state;
 
 	switch(a_state)
@@ -79,7 +85,9 @@ void Shooter::UpdateControlLogic(Joystick &stick)
 	a_state = nextState;
 	
 	printf("State: %d\n", ap_counter->Get());
-
+	} else { //disabled
+		ap_motor->Set(0.0);
+	}
 }
 
 bool Shooter::GetVerbose(void)

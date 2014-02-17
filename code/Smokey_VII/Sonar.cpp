@@ -36,6 +36,7 @@ void Sonar::periodic()
       || (rx_buff[rx_index] == '\t')) {
       // process reading
       rx_buff[rx_index] = 0;
+      printf("raw sonar: %s\n", rx_buff);
 			if(rx_index == 4) {
 				switch(rx_buff[0]) {
 				case 'A':

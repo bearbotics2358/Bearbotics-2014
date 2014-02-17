@@ -3,7 +3,7 @@
 
 #define POT_PORT 2
 #define MAG_SENSOR_PORT 1
-#define GYRO_PORT 3
+#define GYRO_PORT 1
 
 #define FL_PORT 4
 #define FR_PORT 5
@@ -29,5 +29,8 @@
 #define NEGATIVE_AIM_BUTTON 9
 
 #define SONAR_BAUD_RATE 38400
+
+#define AIM_OFFSET 90.0 / (4.98 - 3.48)
+#define AIM_SCALE 3.48
 
 #endif

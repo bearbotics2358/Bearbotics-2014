@@ -8,7 +8,7 @@ Aimerino::Aimerino(int motorPort, int potPort, double scale, double offset)
 	ap_Pot = new Potentiometer(potPort, scale, offset);
 	ap_Motor = new Talon(motorPort);
 	ap_PID = new PIDController(0.1, 0.0, 0.0, ap_Pot, ap_Motor);
-	ap_PID->SetOutputRange(-0.4, 0.4);
+	ap_PID->SetOutputRange(-0.6, 0.6);
 	a_enabled = false;
 }
 
@@ -29,6 +29,7 @@ void Aimerino::setPID(double p, double i, double d)
 
 double Aimerino::getAngle()
 {
+	printf("volt: %f\n", ap_Pot->GetVoltage());
 	return ap_Pot->GetScaledValue();
 }
 

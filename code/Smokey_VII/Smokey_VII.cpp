@@ -19,11 +19,11 @@ Smokey_VII::Smokey_VII(void){
 	ap_FRmotor = new Talon(FR_PORT);
 	ap_BLmotor = new Talon(BL_PORT);
 	ap_BRmotor = new Talon(BR_PORT);
-//	ap_Drive = new RobotDrive(ap_FLmotor, ap_BLmotor, ap_FRmotor, ap_BRmotor);
-//	ap_Drive->SetInvertedMotor(ap_Drive->kFrontRightMotor, true);
-//	ap_Drive->SetInvertedMotor(ap_Drive->kRearRightMotor, true);
+	ap_Drive = new RobotDrive(ap_FLmotor, ap_BLmotor, ap_FRmotor, ap_BRmotor);
+	ap_Drive->SetInvertedMotor(ap_Drive->kFrontRightMotor, true);
+	ap_Drive->SetInvertedMotor(ap_Drive->kRearRightMotor, true);
 	ap_CollectorMotor = new Talon(COLLECTOR_PORT);
-	ap_Aimer = new Aimerino(AIMER_PORT, POT_PORT, 90.0 / (4.77 - 3.03), 3.03);
+	ap_Aimer = new Aimerino(AIMER_PORT, POT_PORT, AIM_OFFSET, AIM_SCALE);
 
 	ap_Shooter = new Shooter(SHOOTER_PORT, MAG_SENSOR_PORT);
 	ap_Shooter->SetVerbose(true);
@@ -46,8 +46,8 @@ Smokey_VII::~Smokey_VII(void)
 	ap_BLmotor = NULL;
 	delete ap_BRmotor;
 	ap_BRmotor = NULL;
-//	delete ap_Drive;
-//	ap_Drive = NULL;
+	delete ap_Drive;
+	ap_Drive = NULL;
 	delete ap_CollectorMotor;
 	ap_CollectorMotor = NULL;
 	delete ap_Aimer;
@@ -68,25 +68,74 @@ void Smokey_VII::RobotInit(void){
 
 void Smokey_VII::TeleopInit(void)
 {
-	printf("Teleop Init");
+	printf("Teleop Init\n");
 	ap_Aimer->setEnabled(true);
 	//ap_Aimer->setAngle(45);
-	ap_Shooter->Enable();
+	ap_Shooter->Init(true);
 	ap_Sonars->EnableFrontOnly();
 }
 
-void Smokey_VII::TeleopPeriodic(void){
+void Smokey_VII::DisabledInit()
+{
+	printf("Disabled\n");
+	ap_Shooter->Init(false);
+}
 
-	// Calibration Routine
+void Smokey_VII::TeleopPeriodic(void){
 	ap_Sonars->periodic();
-	printf("Front Left Sonar %f ft\n", ap_Sonars->GetFeet(Sonar::kLeftFront));
-/*	if(ap_Joystick->GetRawButton(4)) ap_Gyro->Reset();
+	//printf("Front Left Sonar %f ft\n", ap_Sonars->GetFeet(Sonar::kLeftFront));
+	printf("gyro: %f\n", ap_Gyro->GetAngle());
+	
+	if(ap_Joystick->GetRawButton(4)) ap_Gyro->Reset();
 	ap_Drive->MecanumDrive_Cartesian(
-	   .5 * ap_Joystick->GetX(), 
-	   .5 * ap_Joystick->GetY(),
-       .5 * ap_Joystick->GetZ(), 
+	  1 * .5 * ap_Joystick->GetX(), 
+	  1 * .5 * ap_Joystick->GetY(),
+      1 * .5 * ap_Joystick->GetZ(), 
             ap_Gyro->GetAngle());
-	*/
+	
+/*
+	printf("Angle: %f\n", ap_Aimer->getAngle());
+	if(ap_Joystick->GetRawButton(7)) ap_Aimer->setAngle(Aimerino::DOWN);
+	if(ap_Joystick->GetRawButton(8)) ap_Aimer->setAngle(Aimerino::PARALLEL);
+	if(ap_Joystick->GetRawButton(9)) ap_Aimer->setAngle(Aimerino::BELOWSHOOT);
+	if(ap_Joystick->GetRawButton(10)) ap_Aimer->setAngle(Aimerino::SHOOT);
+	if(ap_Joystick->GetRawButton(11)) ap_Aimer->setAngle(Aimerino::ABOVESHOOT);
+	if(ap_Joystick->GetRawButton(12)) ap_Aimer->setAngle(Aimerino::UP);
+*/
+	static int time;
+	static double angle;
+	time ++;
+	if(ap_Joystick->GetRawButton(12) && time > 50){
+		angle += 10;
+		time = 0;
+	}
+	if(ap_Joystick->GetRawButton(11) && time > 50){
+		angle -= 10;
+		time = 0;
+	}
+	if(ap_Joystick->GetRawButton(7)) angle = (Aimerino::DOWN);
+	if(ap_Joystick->GetRawButton(8)) angle = (Aimerino::PARALLEL);
+	if(ap_Joystick->GetRawButton(9)) angle = (Aimerino::ABOVESHOOT);
+	if(ap_Joystick->GetRawButton(10)) angle = (Aimerino::UP);
+	ap_Shooter->SetEnabled((angle > -5 && angle < 80));
+	
+	if(angle < -36) angle = -36;
+	if(angle > 90) angle = 90;	
+	ap_Aimer->setAngle(angle);
+	printf("Set Angle: %f\n", angle);
+	
+	bool positive = ap_Joystick->GetRawButton(COLLECTOR_POSITIVE_BUTTON);
+	bool negative = ap_Joystick->GetRawButton(COLLECTOR_NEGATIVE_BUTTON);
+	
+	if(positive && negative) ap_CollectorMotor->Set(0);
+	else if(positive) ap_CollectorMotor->Set(0.6);	
+	else if(negative) ap_CollectorMotor->Set(-0.6);	
+	else ap_CollectorMotor->Set(0);
+	ap_Shooter->UpdateControlLogic(*ap_Joystick);
+
+	if(ap_Joystick->GetRawButton(2)) ap_Aimer->setEnabled(false);
+	if(ap_Joystick->GetRawButton(6)) ap_Aimer->setEnabled(true);
+
 	
 	/* Calibration Routine
 	if(ap_Joystick->GetRawButton(1))
@@ -97,42 +146,9 @@ void Smokey_VII::TeleopPeriodic(void){
 	{
 		ap_CallibratingMotor->Set(ap_Joystick->GetY());
 	}
-	printf("%f\n", ap_CallibratingMotor->Get());
-		
-	
-/*	if(ap_Joystick->GetRawButton(4)) ap_Gyro->Reset();
-	ap_Drive->MecanumDrive_Cartesian(
-	   .5 * ap_Joystick->GetX(), 
-	   .5 * ap_Joystick->GetY(),
-       .5 * ap_Joystick->GetZ(), 
-            ap_Gyro->GetAngle());
-	*/
-	
-	printf("Angle: %f\n", ap_Aimer->getAngle());
-	if(ap_Joystick->GetRawButton(7)) ap_Aimer->setAngle(Aimerino::DOWN);
-	if(ap_Joystick->GetRawButton(8)) ap_Aimer->setAngle(Aimerino::PARALLEL);
-	if(ap_Joystick->GetRawButton(9)) ap_Aimer->setAngle(Aimerino::BELOWSHOOT);
-	if(ap_Joystick->GetRawButton(10)) ap_Aimer->setAngle(Aimerino::SHOOT);
-	if(ap_Joystick->GetRawButton(11)) ap_Aimer->setAngle(Aimerino::ABOVESHOOT);
-	if(ap_Joystick->GetRawButton(12)) ap_Aimer->setAngle(Aimerino::UP);
+	printf("%f\n", ap_CallibratingMotor->Get());	
+*/
 
-	bool positive = ap_Joystick->GetRawButton(COLLECTOR_POSITIVE_BUTTON);
-	bool negative = ap_Joystick->GetRawButton(COLLECTOR_NEGATIVE_BUTTON);
-	
-	if(positive && negative) ap_CollectorMotor->Set(0);
-	else if(positive) ap_CollectorMotor->Set(0.6);	
-	else if(negative) ap_CollectorMotor->Set(-0.6);	
-	else ap_CollectorMotor->Set(0);
-	
-	// static bool shooting;
-	// if(ap_MagSensor->Get() == 0) shooting = false;
-	// if(ap_Joystick->GetRawButton(1)) shooting = true;
-	// (shooting) ? ap_Shooter->Set(1.0) : ap_Shooter->Set(0.0);
-	// printf("MagSensor: %d\n", ap_MagSensor->Get());
-	ap_Shooter->UpdateControlLogic(*ap_Joystick);
-
-	if(ap_Joystick->GetRawButton(2)) ap_Aimer->setEnabled(false);
-	if(ap_Joystick->GetRawButton(6)) ap_Aimer->setEnabled(true);
 }
 
 void Smokey_VII::TeleopContinuous(void)

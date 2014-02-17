@@ -20,12 +20,14 @@ public:
 	Shooter(unsigned int motorPort, unsigned int stopSensorPort);
 	~Shooter(void);
 
-	void Enable();
+	void Init(bool enable);
 	void UpdateControlLogic(Joystick &stick);
 
 	bool GetVerbose(void);
 	void SetVerbose(bool verbose);
 
+	void SetEnabled(bool enable);
+	
 private:
 	Talon *ap_motor;
 	DigitalInput *ap_stopSensor;
@@ -37,6 +39,7 @@ private:
 	bool a_reArm;
 
 	bool a_verbose;
+	bool a_enabled;
 };
 
 #endif // _SHOOTER_H_
