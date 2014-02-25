@@ -3,17 +3,20 @@
 
 #define POT_PORT 2
 #define MAG_SENSOR_PORT 1
-#define GYRO_PORT 3
+#define GYRO_PORT 1
 
-#define FL_PORT 5
+#define FL_PORT 7
 #define FR_PORT 4
-#define BL_PORT 1
+#define BL_PORT 5
 #define BR_PORT 2
-#define SHOOTER_PORT 7
-#define COLLECTOR_PORT 3
+#define SHOOTER_PORT 3
+#define COLLECTOR_PORT 1
 #define AIMER_PORT 6
 
+#define PICKUP_ANGLE 
+
 #define JOYSTICK_PORT 1
+#define HEDGYSTICK_PORT 2
 
 #define COLLECTOR_SPEED 0.5
 #define CRANK_SPEED 0.5

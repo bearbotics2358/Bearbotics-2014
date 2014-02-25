@@ -14,6 +14,7 @@
 #define AIMER_PORT 6
 
 #define JOYSTICK_PORT 1
+#define HEDGYSTICK_PORT 2
 
 #define COLLECTOR_SPEED 0.5
 #define CRANK_SPEED 0.5

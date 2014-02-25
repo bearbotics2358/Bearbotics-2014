@@ -19,6 +19,14 @@ class Shooter;
 class Smokey_VII : public IterativeRobot
 {
 public:
+	
+	typedef enum{
+		kAutonIdle,
+		kAutonDriveForwards,
+		kAutonShoot,
+	} AutonState;
+	
+	
 	Smokey_VII(void);
 	~Smokey_VII(void);
 
@@ -26,16 +34,20 @@ public:
 
 	void TeleopInit(void);
 	void TeleopPeriodic(void);
-	void TeleopContinuous(void);
-	void TestPeriodic(void);
 
 	void DisabledInit(void);
 	
+	void AutonomousInit(void);
+	void AutonomousPeriodic(void);
+	
+	void DisabledPeriodic(void);
+
 private:
 	int time;
 	double twist;
 	Gyro* ap_Gyro;
 	Joystick* ap_Joystick;
+	Joystick* ap_HedgyStick;
 	Talon* ap_FLmotor;
 	Talon* ap_FRmotor;
 	Talon* ap_BLmotor;
@@ -46,7 +58,8 @@ private:
 	Shooter* ap_Shooter;
 	Talon* ap_CallibratingMotor;
 	Sonar* ap_Sonars;
-
+	AutonState ap_states[];
+	int a_currentState;
 };
 
 #endif 

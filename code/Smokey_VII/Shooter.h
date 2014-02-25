@@ -21,7 +21,7 @@ public:
 	~Shooter(void);
 
 	void Init(bool enable);
-	void UpdateControlLogic(Joystick &stick);
+	void UpdateControlLogic(bool shoot);
 
 	bool GetVerbose(void);
 	void SetVerbose(bool verbose);

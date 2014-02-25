@@ -34,7 +34,8 @@ class Sonar
 	void DisablePort(SensorEnum port);
 	void EnableFrontOnly();
 	void EnableRearOnly();
-
+	void RxFlush();
+	
  private:
 	SerialPort* sport;
 	char rx_buff[SONAR_BUFF_SIZE];

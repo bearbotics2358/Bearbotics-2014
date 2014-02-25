@@ -7,7 +7,7 @@
 
 #include "Smokey_VII.h"
 
-#include "CompPrefs.h"
+#include "Prefs.h"
 #include "Aimerino.h"
 #include "Shooter.h"
 #include "Sonar.h"
@@ -15,6 +15,7 @@
 Smokey_VII::Smokey_VII(void){
 	ap_Gyro = new Gyro(GYRO_PORT);
 	ap_Joystick = new Joystick(JOYSTICK_PORT);
+	ap_HedgyStick = new Joystick(HEDGYSTICK_PORT);
 	ap_FLmotor = new Talon(FL_PORT);
 	ap_FRmotor = new Talon(FR_PORT);
 	ap_BLmotor = new Talon(BL_PORT);
@@ -22,6 +23,7 @@ Smokey_VII::Smokey_VII(void){
 	ap_Drive = new RobotDrive(ap_FLmotor, ap_BLmotor, ap_FRmotor, ap_BRmotor);
 	ap_Drive->SetInvertedMotor(ap_Drive->kFrontRightMotor, true);
 	ap_Drive->SetInvertedMotor(ap_Drive->kRearRightMotor, true);
+	ap_Drive->SetInvertedMotor(ap_Drive->kFrontLeftMotor, false);
 	ap_CollectorMotor = new Talon(COLLECTOR_PORT);
 	ap_Aimer = new Aimerino(AIMER_PORT, POT_PORT, AIM_OFFSET, AIM_SCALE);
 
@@ -55,8 +57,12 @@ Smokey_VII::~Smokey_VII(void)
 	delete ap_Shooter;
 	ap_Shooter = NULL;
 	delete ap_CallibratingMotor;
+	ap_CallibratingMotor = NULL;
 	delete ap_Sonars;
 	ap_Sonars = NULL;
+	delete ap_HedgyStick;
+	ap_HedgyStick = NULL;
+	
 }
 
 void Smokey_VII::RobotInit(void){
@@ -70,72 +76,72 @@ void Smokey_VII::TeleopInit(void)
 {
 	printf("Teleop Init\n");
 	ap_Aimer->setEnabled(true);
-	//ap_Aimer->setAngle(45);
 	ap_Shooter->Init(true);
 	ap_Sonars->EnableFrontOnly();
+	ap_Sonars->RxFlush();
 }
 
 void Smokey_VII::DisabledInit()
 {
 	printf("Disabled\n");
 	ap_Shooter->Init(false);
+	ap_Sonars->RxFlush();
 }
 
 void Smokey_VII::TeleopPeriodic(void){
+	static int time = 0;
+	static double angle = 0;
+	static bool fieldOrientated = true;
+	bool positive = ap_Joystick->GetRawButton(COLLECTOR_POSITIVE_BUTTON);
+	bool negative = ap_Joystick->GetRawButton(COLLECTOR_NEGATIVE_BUTTON);
+
 	ap_Sonars->periodic();
-	//printf("Front Left Sonar %f ft\n", ap_Sonars->GetFeet(Sonar::kLeftFront));
+	printf("Front Left Sonar %f ft\n", ap_Sonars->GetFeet(Sonar::kLeftFront));
 	printf("gyro: %f\n", ap_Gyro->GetAngle());
 	
-	if(ap_Joystick->GetRawButton(4)) ap_Gyro->Reset();
-	ap_Drive->MecanumDrive_Cartesian(
-	  1 * .5 * ap_Joystick->GetX(), 
-	  1 * .5 * ap_Joystick->GetY(),
-      1 * .5 * ap_Joystick->GetZ(), 
-            ap_Gyro->GetAngle());
+	if(ap_Joystick->GetRawButton(11)) fieldOrientated = false;
+	else if (ap_Joystick->GetRawButton(12)) fieldOrientated = true;
 	
-/*
-	printf("Angle: %f\n", ap_Aimer->getAngle());
-	if(ap_Joystick->GetRawButton(7)) ap_Aimer->setAngle(Aimerino::DOWN);
-	if(ap_Joystick->GetRawButton(8)) ap_Aimer->setAngle(Aimerino::PARALLEL);
-	if(ap_Joystick->GetRawButton(9)) ap_Aimer->setAngle(Aimerino::BELOWSHOOT);
-	if(ap_Joystick->GetRawButton(10)) ap_Aimer->setAngle(Aimerino::SHOOT);
-	if(ap_Joystick->GetRawButton(11)) ap_Aimer->setAngle(Aimerino::ABOVESHOOT);
-	if(ap_Joystick->GetRawButton(12)) ap_Aimer->setAngle(Aimerino::UP);
-*/
-	static int time;
-	static double angle;
-	time ++;
-	if(ap_Joystick->GetRawButton(12) && time > 50){
+	if(ap_Joystick->GetRawButton(4)) ap_Gyro->Reset();
+	
+	ap_Drive->MecanumDrive_Cartesian(
+	  1 * ap_Joystick->GetX(), 
+	  1 * ap_Joystick->GetY(),
+      1 * ap_Joystick->GetZ(), 
+      fieldOrientated ? ap_Gyro->GetAngle() : 0);
+	
+
+	if(ap_HedgyStick->GetRawButton(6) && time > 50){
 		angle += 10;
 		time = 0;
 	}
-	if(ap_Joystick->GetRawButton(11) && time > 50){
+	if(ap_HedgyStick->GetRawButton(7) && time > 50){
 		angle -= 10;
 		time = 0;
 	}
-	if(ap_Joystick->GetRawButton(7)) angle = (Aimerino::DOWN);
-	if(ap_Joystick->GetRawButton(8)) angle = (Aimerino::PARALLEL);
-	if(ap_Joystick->GetRawButton(9)) angle = (Aimerino::ABOVESHOOT);
-	if(ap_Joystick->GetRawButton(10)) angle = (Aimerino::UP);
-	ap_Shooter->SetEnabled((angle > -5 && angle < 80));
+	if(ap_HedgyStick->GetRawButton(2)) angle = (Aimerino::DOWN);
+	if(ap_HedgyStick->GetRawButton(5)) angle = (Aimerino::PARALLEL);
+	if(ap_HedgyStick->GetRawButton(3)) angle = (Aimerino::ABOVESHOOT);
+	if(ap_HedgyStick->GetRawButton(4)) angle = (Aimerino::UP);
 	
-	if(angle < -36) angle = -36;
-	if(angle > 90) angle = 90;	
+	if(angle < -40) angle = -36;
+	if(angle > 95) angle = 90;	
 	ap_Aimer->setAngle(angle);
-	printf("Set Angle: %f\n", angle);
 	
-	bool positive = ap_Joystick->GetRawButton(COLLECTOR_POSITIVE_BUTTON);
-	bool negative = ap_Joystick->GetRawButton(COLLECTOR_NEGATIVE_BUTTON);
+	printf("Set Angle: %f\n", angle);
+	printf("Angle: %f\n", ap_Aimer->getAngle());
+	
 	
 	if(positive && negative) ap_CollectorMotor->Set(0);
-	else if(positive) ap_CollectorMotor->Set(0.6);	
-	else if(negative) ap_CollectorMotor->Set(-0.6);	
+	else if(positive) ap_CollectorMotor->Set(1.0);	
+	else if(negative) ap_CollectorMotor->Set(-1.0);	
 	else ap_CollectorMotor->Set(0);
-	ap_Shooter->UpdateControlLogic(*ap_Joystick);
+-	(angle > -5 && angle < 80) ? printf("Shooting Enabled") :
+								 printf("Shooting Disabled");
+	ap_Shooter->SetEnabled((angle > -5 && angle < 80));
+	ap_Shooter->UpdateControlLogic(ap_Joystick->GetRawButton(1));
 
-	if(ap_Joystick->GetRawButton(2)) ap_Aimer->setEnabled(false);
-	if(ap_Joystick->GetRawButton(6)) ap_Aimer->setEnabled(true);
-
+	time ++;
 	
 	/* Calibration Routine
 	if(ap_Joystick->GetRawButton(1))
@@ -151,14 +157,43 @@ void Smokey_VII::TeleopPeriodic(void){
 
 }
 
-void Smokey_VII::TeleopContinuous(void)
-{
+void Smokey_VII::AutonomousInit(void){
+	a_currentState = 0;
+	ap_Sonars->RxFlush();
+	 
 }
 
-void Smokey_VII::TestPeriodic(void)
-{
-
+void Smokey_VII::AutonomousPeriodic(void){
+	static int time = 0;
+	AutonState currentState = ap_states[a_currentState];
 	
+	ap_Drive->MecanumDrive_Cartesian(0,0,0);
+	ap_Shooter->UpdateControlLogic(false);
+	ap_Sonars->periodic();
+	
+	switch(currentState){
+	case kAutonIdle:
+		if(time > 50){
+			a_currentState ++;
+		}
+		break;
+	case kAutonDriveForwards:
+		ap_Aimer->setAngle(60);
+		ap_Drive->MecanumDrive_Cartesian(0, 0.5, 0, ap_Gyro->GetAngle());
+		if(ap_Sonars->GetDistanceFront()<= 198.12){
+			a_currentState ++;
+		}
+		break;
+	case kAutonShoot:
+		ap_Shooter->UpdateControlLogic(true);
+		a_currentState ++;
+		break;	
+	}
+	time ++;
+}
+
+void Smokey_VII::DisabledPeriodic(){
+	ap_Sonars->periodic();
 }
 
 START_ROBOT_CLASS(Smokey_VII);

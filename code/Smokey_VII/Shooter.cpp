@@ -35,7 +35,7 @@ void Shooter::SetEnabled(bool enable)
 	a_enabled = enable;
 }
 
-void Shooter::UpdateControlLogic(Joystick &stick)
+void Shooter::UpdateControlLogic(bool shoot)
 {
 	if(a_enabled){
 	ShooterState_t nextState = a_state;
@@ -44,7 +44,7 @@ void Shooter::UpdateControlLogic(Joystick &stick)
 	{
 		case SHOOTER_STATE_IDLE:
 			ap_motor->Set(0.0);
-			if(stick.GetRawButton(1)) {
+			if(shoot) {
 				ap_counter->Reset();
 				nextState = SHOOTER_STATE_ARMING;
 			}
@@ -57,16 +57,16 @@ void Shooter::UpdateControlLogic(Joystick &stick)
 			break;
 		case SHOOTER_STATE_ARMED:
 			ap_motor->Set(0.0);
-			if(stick.GetRawButton(1)) {
+			if(shoot) {
 				ap_counter->Reset();
 				nextState = SHOOTER_STATE_SHOOTING;
 				a_reArm = true;
-			}
+			}/*
 			if(stick.GetRawButton(4)) {
 				ap_counter->Reset();
 				nextState = SHOOTER_STATE_SHOOTING;
 				a_reArm = false;
-			}
+			}*/
 			break;
 		case SHOOTER_STATE_SHOOTING:
 			ap_motor->Set(1.0);

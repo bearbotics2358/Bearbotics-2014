@@ -13,6 +13,7 @@ Sonar::Sonar(int baud)
 	int i;
 
 	sport = new SerialPort(baud);
+	sport->DisableTermination();
 	sport->SetWriteBufferMode(SerialPort::kFlushOnAccess);
 	rx_index = 0;
 	for(i = 0; i < SONAR_BUFF_SIZE; i++) {
@@ -31,7 +32,10 @@ void Sonar::periodic()
   // when '\r' (or '\t') found, process reading
   while(sport->GetBytesReceived() > 0) {
 		// read one char
+	  printf("char rcvd ...");
 		sport->Read(&rx_buff[rx_index], 1);
+		printf("\n");
+		fflush(stdout);
     if((rx_buff[rx_index] == '\r') 
       || (rx_buff[rx_index] == '\t')) {
       // process reading
@@ -121,7 +125,16 @@ void Sonar::EnableRearOnly()
 {
 	DisablePort(kLeftFront);
 	DisablePort(kRightFront);
-	EnablePort(kRear);
+EnablePort(kRear);
 	DisablePort(kNone);
+}
+
+void Sonar::RxFlush()
+{
+	char Kiwi;
+	while(sport->GetBytesReceived() > 0){
+		sport->Read(&Kiwi,1);
+	}
+	rx_index = 0;
 }
 
