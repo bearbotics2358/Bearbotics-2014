@@ -27,6 +27,7 @@ public:
 	void SetVerbose(bool verbose);
 
 	void SetEnabled(bool enable);
+	ShooterState_t GetState(void){ return a_state; }
 	
 private:
 	Talon *ap_motor;

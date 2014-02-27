@@ -55,31 +55,6 @@ void Shooter::UpdateControlLogic(bool shoot)
 				nextState = SHOOTER_STATE_IDLE;
 			}
 			break;
-		case SHOOTER_STATE_ARMED:
-			ap_motor->Set(0.0);
-			if(shoot) {
-				ap_counter->Reset();
-				nextState = SHOOTER_STATE_SHOOTING;
-				a_reArm = true;
-			}/*
-			if(stick.GetRawButton(4)) {
-				ap_counter->Reset();
-				nextState = SHOOTER_STATE_SHOOTING;
-				a_reArm = false;
-			}*/
-			break;
-		case SHOOTER_STATE_SHOOTING:
-			ap_motor->Set(1.0);
-			if(ap_counter->Get() > 0)
-			{
-				ap_counter->Reset();
-				if(a_reArm) {
-					nextState = SHOOTER_STATE_ARMING;
-				} else {
-					nextState = SHOOTER_STATE_IDLE;
-				}
-			}
-			break;
 	}
 
 	a_state = nextState;

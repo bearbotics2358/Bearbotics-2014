@@ -15,6 +15,8 @@ Sonar::Sonar(int baud)
 	sport = new SerialPort(baud);
 	sport->DisableTermination();
 	sport->SetWriteBufferMode(SerialPort::kFlushOnAccess);
+	sport->SetFlowControl(SerialPort::kFlowControl_None);
+	sport->SetReadBufferSize(0);
 	rx_index = 0;
 	for(i = 0; i < SONAR_BUFF_SIZE; i++) {
 		rx_buff[i] = 0;
@@ -30,17 +32,22 @@ void Sonar::periodic()
   // every time through loop, get command chars if available
 	// and add to rx buffer
   // when '\r' (or '\t') found, process reading
-  while(sport->GetBytesReceived() > 0) {
+	while(1) {
+		int ret = sport->GetBytesReceived();
+		printf("rcvd: %d\n", ret);
+		if(ret == 0) {
+			break;
+		}
 		// read one char
-	  printf("char rcvd ...");
-		sport->Read(&rx_buff[rx_index], 1);
-		printf("\n");
+		printf("char rcvd ...");
+		ret = sport->Read(&rx_buff[rx_index], 1);
+		printf("ret: %d\n", ret);
 		fflush(stdout);
-    if((rx_buff[rx_index] == '\r') 
-      || (rx_buff[rx_index] == '\t')) {
-      // process reading
-      rx_buff[rx_index] = 0;
-      printf("raw sonar: %s\n", rx_buff);
+		if((rx_buff[rx_index] == '\r') 
+				|| (rx_buff[rx_index] == '\t')) {
+			// process reading
+			rx_buff[rx_index] = 0;
+			printf("raw sonar: %s\n", rx_buff);
 			if(rx_index == 4) {
 				switch(rx_buff[0]) {
 				case 'A':
@@ -63,6 +70,7 @@ void Sonar::periodic()
 			}
       // reset for next command
       rx_index = 0;
+      break;
     } else {
       rx_index++;
 			// should never happen
@@ -70,7 +78,9 @@ void Sonar::periodic()
 				rx_index = 0;
 			}
     }
-  }
+  }/* else {
+	  printf("Nothing Recieved\n");
+  }*/
 }  
 
 int Sonar::GetCM(SensorEnum port)

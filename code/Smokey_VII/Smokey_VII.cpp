@@ -4,6 +4,7 @@
 #include <Joystick.h>
 #include <RobotDrive.h>
 #include <DigitalInput.h>
+#include <Math.h>
 
 #include "Smokey_VII.h"
 
@@ -12,7 +13,8 @@
 #include "Shooter.h"
 #include "Sonar.h"
 
-Smokey_VII::Smokey_VII(void){
+Smokey_VII::Smokey_VII(void)
+{
 	ap_Gyro = new Gyro(GYRO_PORT);
 	ap_Joystick = new Joystick(JOYSTICK_PORT);
 	ap_HedgyStick = new Joystick(HEDGYSTICK_PORT);
@@ -26,12 +28,17 @@ Smokey_VII::Smokey_VII(void){
 	ap_Drive->SetInvertedMotor(ap_Drive->kFrontLeftMotor, false);
 	ap_CollectorMotor = new Talon(COLLECTOR_PORT);
 	ap_Aimer = new Aimerino(AIMER_PORT, POT_PORT, AIM_OFFSET, AIM_SCALE);
-
 	ap_Shooter = new Shooter(SHOOTER_PORT, MAG_SENSOR_PORT);
 	ap_Shooter->SetVerbose(true);
 	ap_Sonars = new Sonar(SONAR_BAUD_RATE);
-
 	ap_CallibratingMotor = new Talon(10);
+	a_fieldOrientated = false;
+	a_currentState = 0;
+	ap_states[0] = kTestMoveTo60;
+	ap_states[1] = kTestArm;
+	ap_states[2] = kTestCollect;
+	ap_states[3] = kTestShoot;
+
 }
 
 Smokey_VII::~Smokey_VII(void)
@@ -91,26 +98,24 @@ void Smokey_VII::DisabledInit()
 void Smokey_VII::TeleopPeriodic(void){
 	static int time = 0;
 	static double angle = 0;
-	static bool fieldOrientated = true;
-	bool positive = ap_Joystick->GetRawButton(COLLECTOR_POSITIVE_BUTTON);
-	bool negative = ap_Joystick->GetRawButton(COLLECTOR_NEGATIVE_BUTTON);
+	bool IncreaseCollector = ap_Joystick->GetRawButton(COLLECTOR_POSITIVE_BUTTON);
+	bool DecreaseCollector = ap_Joystick->GetRawButton(COLLECTOR_NEGATIVE_BUTTON);
 
 	ap_Sonars->periodic();
 	printf("Front Left Sonar %f ft\n", ap_Sonars->GetFeet(Sonar::kLeftFront));
 	printf("gyro: %f\n", ap_Gyro->GetAngle());
 	
-	if(ap_Joystick->GetRawButton(11)) fieldOrientated = false;
-	else if (ap_Joystick->GetRawButton(12)) fieldOrientated = true;
+	if(ap_Joystick->GetRawButton(11)) 		a_fieldOrientated = false;
+	else if (ap_Joystick->GetRawButton(12)) a_fieldOrientated = true;
 	
 	if(ap_Joystick->GetRawButton(4)) ap_Gyro->Reset();
 	
 	ap_Drive->MecanumDrive_Cartesian(
-	  1 * ap_Joystick->GetX(), 
-	  1 * ap_Joystick->GetY(),
-      1 * ap_Joystick->GetZ(), 
-      fieldOrientated ? ap_Gyro->GetAngle() : 0);
+			1 * ap_Joystick->GetX(),
+			1 * ap_Joystick->GetY(),
+			1 * ap_Joystick->GetZ(),
+		a_fieldOrientated ? ap_Gyro->GetAngle() : 0);
 	
-
 	if(ap_HedgyStick->GetRawButton(6) && time > 50){
 		angle += 10;
 		time = 0;
@@ -132,14 +137,15 @@ void Smokey_VII::TeleopPeriodic(void){
 	printf("Angle: %f\n", ap_Aimer->getAngle());
 	
 	
-	if(positive && negative) ap_CollectorMotor->Set(0);
-	else if(positive) ap_CollectorMotor->Set(1.0);	
-	else if(negative) ap_CollectorMotor->Set(-1.0);	
-	else ap_CollectorMotor->Set(0);
--	(angle > -5 && angle < 80) ? printf("Shooting Enabled") :
-								 printf("Shooting Disabled");
-	ap_Shooter->SetEnabled((angle > -5 && angle < 80));
-	ap_Shooter->UpdateControlLogic(ap_Joystick->GetRawButton(1));
+	if(IncreaseCollector == DecreaseCollector)	ap_CollectorMotor->Set(0);
+	else if(IncreaseCollector)					ap_CollectorMotor->Set(1.0);	
+	else if(DecreaseCollector)					ap_CollectorMotor->Set(-1.0);	
+-	
+
+	(angle < 80) ? 	printf("Shooting Enabled\n") :
+					printf("Shooting Disabled\n");
+	ap_Shooter->SetEnabled(angle < 80);
+	ap_Shooter->UpdateControlLogic(ap_Joystick->GetRawButton(1) && angle > -5);
 
 	time ++;
 	
@@ -165,30 +171,66 @@ void Smokey_VII::AutonomousInit(void){
 
 void Smokey_VII::AutonomousPeriodic(void){
 	static int time = 0;
-	AutonState currentState = ap_states[a_currentState];
+	AutonState currentState;
 	
 	ap_Drive->MecanumDrive_Cartesian(0,0,0);
 	ap_Shooter->UpdateControlLogic(false);
-	ap_Sonars->periodic();
+//	ap_Sonars->periodic();
 	
-	switch(currentState){
-	case kAutonIdle:
-		if(time > 50){
+	if(a_currentState < sizeof(ap_states)){
+	
+		currentState = ap_states[a_currentState];
+		
+	
+		switch(currentState){
+		case kAutonIdle:
+			if(time > 50){
+				a_currentState ++;
+			}
+			break;
+		case kAutonDriveForwards:
+			ap_Aimer->setAngle(60);
+			ap_Drive->MecanumDrive_Cartesian(0, 0.5, 0, ap_Gyro->GetAngle());
+			if(ap_Sonars->GetDistanceFront()<= 198.12){
+				a_currentState ++;
+			}	
+			break;
+		case kAutonShoot:
+			ap_Shooter->UpdateControlLogic(true);
 			a_currentState ++;
+			break;
+		case kTestMoveTo60:
+			ap_Aimer->setAngle(60);
+			if(fabs(ap_Aimer->getAngle() - 60) < 5){
+				a_currentState ++;
+				time = 0;
+			}
+			break;
+		case kTestArm:
+			ap_Shooter->UpdateControlLogic(true);
+			if(ap_Shooter->GetState() == SHOOTER_STATE_IDLE){
+				a_currentState ++;
+				time = 0;
+			}
+			break;
+		case kTestCollect:
+			ap_CollectorMotor->Set(1);
+			if(time > 100){
+				time = 0;
+				a_currentState ++;
+			}
+			break;
+		case kTestShoot:
+			ap_Shooter->UpdateControlLogic(true);
+			if(ap_Shooter->GetState() == SHOOTER_STATE_IDLE){
+				a_currentState ++;
+				time = 0;
+			}
+			break;
+		case kAutonNULL:
+			break;
 		}
-		break;
-	case kAutonDriveForwards:
-		ap_Aimer->setAngle(60);
-		ap_Drive->MecanumDrive_Cartesian(0, 0.5, 0, ap_Gyro->GetAngle());
-		if(ap_Sonars->GetDistanceFront()<= 198.12){
-			a_currentState ++;
-		}
-		break;
-	case kAutonShoot:
-		ap_Shooter->UpdateControlLogic(true);
-		a_currentState ++;
-		break;	
-	}
+	}	
 	time ++;
 }
 

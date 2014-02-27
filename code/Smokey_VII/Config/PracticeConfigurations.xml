@@ -1,0 +1,27 @@
+<?xml version="1.0" encloding="UTF-8"?>
+<Smokey_VII>
+	<Autonomous>
+	</Autonomous>
+	<Ports>
+		<Motors>
+			<Drive>
+				<FrontLeft  port="7"/>
+				<FrontRight port="4"/>
+				<BackLeft   port="5"/>
+				<BackRight  port="2"/>
+			</Drive>
+			<Shooter   port="3"/>
+			<Collector port="1"/>
+			<Aimer     port="6"/>
+		</Motors>
+		<Sensors>
+			<Gyro port="1"/>
+			<Pot  port="2"/>
+			<Mag  port="1"/>
+		</Sensors>
+		<Joysticks>
+			<Timmy port="1"/>
+			<Hedgy port="2"/>
+		</Joysticks>
+	</Ports>
+</Smokey_VII>
