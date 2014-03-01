@@ -6,6 +6,7 @@
 */
 
 #include "Sonar.h"
+#include <stdio.h>
 #include <stdlib.h> // atoi
 
 Sonar::Sonar(int baud)
