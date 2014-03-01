@@ -19,7 +19,7 @@ public:
 	Aimerino(int motorPort, int potPort, double scale, double offset);
 	virtual ~Aimerino(void);
 	double getAngle(void);
-	void setAngle(double angle);
+	void setAngle(double angle, double speed);
 	void setEnabled(bool enable);
 	void setPID(double p, double i, double d);
 	void printPID(void);

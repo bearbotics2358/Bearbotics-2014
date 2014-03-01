@@ -12,6 +12,7 @@ class RobotBase;
 class IterativeRobot;
 class DigitalInput;
 class Sonar;
+class Timer;
 
 class Aimerino;
 class Shooter;
@@ -64,6 +65,7 @@ private:
 	Talon* ap_CallibratingMotor;
 	Sonar* ap_Sonars;
 	AutonState ap_states[4];
+	Timer *ap_AutonTimer;
 };
 
 #endif 

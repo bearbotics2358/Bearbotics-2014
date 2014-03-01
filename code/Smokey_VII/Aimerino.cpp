@@ -33,8 +33,9 @@ double Aimerino::getAngle()
 	return ap_Pot->GetScaledValue();
 }
 
-void Aimerino::setAngle(double angle)
+void Aimerino::setAngle(double angle, double speed)
 {
+	ap_PID->SetOutputRange(-speed, speed);
 	ap_PID->SetSetpoint(angle);
 }
 

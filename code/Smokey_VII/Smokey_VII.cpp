@@ -6,6 +6,7 @@
 #include <DigitalInput.h>
 #include <SmartDashboard/SmartDashboard.h>
 #include <math.h>
+#include <Timer.h>
 
 #include "Smokey_VII.h"
 
@@ -32,13 +33,14 @@ Smokey_VII::Smokey_VII(void)
 	ap_Shooter = new Shooter(SHOOTER_PORT, MAG_SENSOR_PORT);
 	ap_Shooter->SetVerbose(true);
 	ap_Sonars = new Sonar(SONAR_BAUD_RATE);
+	ap_AutonTimer = new Timer();
 	ap_CallibratingMotor = new Talon(10);
 	a_fieldOrientated = false;
 	a_currentState = 0;
 	ap_states[0] = kTestMoveTo60;
 	ap_states[1] = kTestArm;
-	ap_states[2] = kTestCollect;
-	ap_states[3] = kTestShoot;
+//	ap_states[2] = kTestCollect;
+//	ap_states[3] = kTestShoot;
 
 }
 
@@ -88,6 +90,11 @@ void Smokey_VII::TeleopInit(void)
 	ap_Shooter->Init(true);
 	ap_Sonars->EnableFrontOnly();
 	ap_Sonars->RxFlush();
+	SmartDashboard::PutNumber("P", 0.054);
+	SmartDashboard::PutNumber("I", 0.0);
+	SmartDashboard::PutNumber("D", 0.01);
+	SmartDashboard::PutNumber("Speed", 1.0);
+	
 }
 
 void Smokey_VII::DisabledInit()
@@ -102,6 +109,11 @@ void Smokey_VII::TeleopPeriodic(void){
 	static double angle = 0;
 	bool IncreaseCollector = ap_Joystick->GetRawButton(COLLECTOR_POSITIVE_BUTTON);
 	bool DecreaseCollector = ap_Joystick->GetRawButton(COLLECTOR_NEGATIVE_BUTTON);
+
+	ap_Aimer->setPID(SmartDashboard::GetNumber("P"),
+					SmartDashboard::GetNumber("I"),
+					SmartDashboard::GetNumber("D"));
+	
 
 	ap_Sonars->periodic();
 	printf("Front Left Sonar %f ft\n", ap_Sonars->GetFeet(Sonar::kLeftFront));
@@ -136,7 +148,7 @@ void Smokey_VII::TeleopPeriodic(void){
 	
 	if(angle < -40) angle = -36;
 	if(angle > 95) angle = 90;	
-	ap_Aimer->setAngle(angle);
+	ap_Aimer->setAngle(angle, SmartDashboard::GetNumber("Speed"));
 	
 	printf("Set Angle: %f\n", angle);
 	printf("Angle: %f\n", ap_Aimer->getAngle());
@@ -172,30 +184,26 @@ void Smokey_VII::TeleopPeriodic(void){
 void Smokey_VII::AutonomousInit(void){
 	a_currentState = 0;
 	ap_Sonars->RxFlush();
-	 
+	ap_Aimer->setEnabled(true);
+	ap_Shooter->Init(false);
 }
 
 void Smokey_VII::AutonomousPeriodic(void){
-	static int time = 0;
 	AutonState currentState;
 	
-	ap_Drive->MecanumDrive_Cartesian(0,0,0);
+	ap_Drive->MecanumDrive_Cartesian(0,0,0);	
 	ap_Shooter->UpdateControlLogic(false, false);
-//	ap_Sonars->periodic();
+	ap_Sonars->periodic();
+	ap_Aimer->setPID(0.054, 0.0, 0.015);
 	
-	if(a_currentState < sizeof(ap_states)){
+	if(a_currentState < static_cast<int>(sizeof(ap_states))){
 	
 		currentState = ap_states[a_currentState];
 		
 	
 		switch(currentState){
-		case kAutonIdle:
-			if(time > 50){
-				a_currentState ++;
-			}
-			break;
 		case kAutonDriveForwards:
-			ap_Aimer->setAngle(60);
+			ap_Aimer->setAngle(60, 0.6);
 			ap_Drive->MecanumDrive_Cartesian(0, 0.5, 0, ap_Gyro->GetAngle());
 			if(ap_Sonars->GetDistanceFront()<= 198.12){
 				a_currentState ++;
@@ -206,38 +214,31 @@ void Smokey_VII::AutonomousPeriodic(void){
 			a_currentState ++;
 			break;
 		case kTestMoveTo60:
-			ap_Aimer->setAngle(60);
+			ap_Aimer->setAngle(60, 1.0);
 			if(fabs(ap_Aimer->getAngle() - 60) < 5){
 				a_currentState ++;
-				time = 0;
+				ap_Shooter->UpdateControlLogic(true, false);
+				ap_AutonTimer->Start();	
 			}
 			break;
 		case kTestArm:
-			ap_Shooter->UpdateControlLogic(true, false);
-			if(ap_Shooter->GetState() == SHOOTER_STATE_IDLE){
-				a_currentState ++;
-				time = 0;
-			}
-			break;
-		case kTestCollect:
 			ap_CollectorMotor->Set(1);
-			if(time > 100){
-				time = 0;
+			if(ap_AutonTimer->HasPeriodPassed(2.0)){
 				a_currentState ++;
+				ap_AutonTimer->Stop();
+				ap_AutonTimer->Reset();
 			}
 			break;
 		case kTestShoot:
 			ap_Shooter->UpdateControlLogic(true, false);
 			if(ap_Shooter->GetState() == SHOOTER_STATE_IDLE){
 				a_currentState ++;
-				time = 0;
 			}
 			break;
 		case kAutonNULL:
 			break;
 		}
 	}	
-	time ++;
 }
 
 void Smokey_VII::DisabledPeriodic(){
