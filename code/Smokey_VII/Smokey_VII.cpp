@@ -4,7 +4,7 @@
 #include <Joystick.h>
 #include <RobotDrive.h>
 #include <DigitalInput.h>
-#include <SmartDashboard.h>
+#include <SmartDashboard/SmartDashboard.h>
 #include <math.h>
 
 #include "Smokey_VII.h"
