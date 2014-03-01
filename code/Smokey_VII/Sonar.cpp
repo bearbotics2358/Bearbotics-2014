@@ -34,14 +34,14 @@ void Sonar::periodic()
   // when '\r' (or '\t') found, process reading
 	while(1) {
 		int ret = sport->GetBytesReceived();
-		printf("rcvd: %d\n", ret);
+		// printf("rcvd: %d\n", ret);
 		if(ret == 0) {
 			break;
 		}
 		// read one char
-		printf("char rcvd ...");
+		// printf("char rcvd ...");
 		ret = sport->Read(&rx_buff[rx_index], 1);
-		printf("ret: %d\n", ret);
+		// printf("\n");
 		fflush(stdout);
 		if((rx_buff[rx_index] == '\r') 
 				|| (rx_buff[rx_index] == '\t')) {

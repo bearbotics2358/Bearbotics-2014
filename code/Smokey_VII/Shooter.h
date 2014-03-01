@@ -5,13 +5,13 @@ class Talon;
 class DigitalInput;
 class Joystick;
 class Counter;
+class Timer;
 
 typedef enum
 {
 	SHOOTER_STATE_IDLE,
 	SHOOTER_STATE_ARMING,
-	SHOOTER_STATE_ARMED,
-	SHOOTER_STATE_SHOOTING
+	SHOOTER_STATE_NO_REARM,
 } ShooterState_t;
 
 class Shooter
@@ -21,7 +21,7 @@ public:
 	~Shooter(void);
 
 	void Init(bool enable);
-	void UpdateControlLogic(bool shoot);
+	void UpdateControlLogic(bool shoot, bool noRearm);
 
 	bool GetVerbose(void);
 	void SetVerbose(bool verbose);
@@ -33,7 +33,7 @@ private:
 	Talon *ap_motor;
 	DigitalInput *ap_stopSensor;
 	Counter *ap_counter;
-	
+	Timer *ap_timer;
 	
 	ShooterState_t a_state;
 	bool a_stopSensorState;

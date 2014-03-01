@@ -145,7 +145,8 @@ void Smokey_VII::TeleopPeriodic(void){
 	(angle < 80) ? 	printf("Shooting Enabled\n") :
 					printf("Shooting Disabled\n");
 	ap_Shooter->SetEnabled(angle < 80);
-	ap_Shooter->UpdateControlLogic(ap_Joystick->GetRawButton(1) && angle > -5);
+	ap_Shooter->UpdateControlLogic(ap_Joystick->GetRawButton(1) && angle > -5,
+									ap_Joystick->GetRawButton(2) && angle > -5);
 
 	time ++;
 	
@@ -174,7 +175,7 @@ void Smokey_VII::AutonomousPeriodic(void){
 	AutonState currentState;
 	
 	ap_Drive->MecanumDrive_Cartesian(0,0,0);
-	ap_Shooter->UpdateControlLogic(false);
+	ap_Shooter->UpdateControlLogic(false, false);
 //	ap_Sonars->periodic();
 	
 	if(a_currentState < sizeof(ap_states)){
@@ -196,7 +197,7 @@ void Smokey_VII::AutonomousPeriodic(void){
 			}	
 			break;
 		case kAutonShoot:
-			ap_Shooter->UpdateControlLogic(true);
+			ap_Shooter->UpdateControlLogic(true, false);
 			a_currentState ++;
 			break;
 		case kTestMoveTo60:
@@ -207,7 +208,7 @@ void Smokey_VII::AutonomousPeriodic(void){
 			}
 			break;
 		case kTestArm:
-			ap_Shooter->UpdateControlLogic(true);
+			ap_Shooter->UpdateControlLogic(true, false);
 			if(ap_Shooter->GetState() == SHOOTER_STATE_IDLE){
 				a_currentState ++;
 				time = 0;
@@ -221,7 +222,7 @@ void Smokey_VII::AutonomousPeriodic(void){
 			}
 			break;
 		case kTestShoot:
-			ap_Shooter->UpdateControlLogic(true);
+			ap_Shooter->UpdateControlLogic(true, false);
 			if(ap_Shooter->GetState() == SHOOTER_STATE_IDLE){
 				a_currentState ++;
 				time = 0;
