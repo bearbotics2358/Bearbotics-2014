@@ -106,6 +106,9 @@ void Smokey_VII::TeleopPeriodic(void){
 	ap_Sonars->periodic();
 	printf("Front Left Sonar %f ft\n", ap_Sonars->GetFeet(Sonar::kLeftFront));
 	printf("gyro: %f\n", ap_Gyro->GetAngle());
+
+	SmartDashboard::PutNumber("Front Left Sonar", ap_Sonars->GetFeet(Sonar::kLeftFront));
+	SmartDashboard::PutNumber("Gyro Angle", ap_Gyro->GetAngle());
 	
 	if(ap_Joystick->GetRawButton(11)) 		a_fieldOrientated = false;
 	else if (ap_Joystick->GetRawButton(12)) a_fieldOrientated = true;
