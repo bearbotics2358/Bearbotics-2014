@@ -186,21 +186,21 @@ void Smokey_VII::AutonomousInit(void){
 	ap_Sonars->RxFlush();
 	ap_Aimer->setEnabled(true);
 	ap_Shooter->Init(false);
+	ap_AutonTimer->Reset();
 }
 
 void Smokey_VII::AutonomousPeriodic(void){
 	AutonState currentState;
 	
 	ap_Drive->MecanumDrive_Cartesian(0,0,0);	
-	ap_Shooter->UpdateControlLogic(false, false);
 	ap_Sonars->periodic();
 	ap_Aimer->setPID(0.054, 0.0, 0.015);
+	ap_Shooter->UpdateControlLogic(false, false);
 	
 	if(a_currentState < static_cast<int>(sizeof(ap_states))){
 	
 		currentState = ap_states[a_currentState];
 		
-	
 		switch(currentState){
 		case kAutonDriveForwards:
 			ap_Aimer->setAngle(60, 0.6);
@@ -218,12 +218,14 @@ void Smokey_VII::AutonomousPeriodic(void){
 			if(fabs(ap_Aimer->getAngle() - 60) < 5){
 				a_currentState ++;
 				ap_Shooter->UpdateControlLogic(true, false);
+				ap_AutonTimer->Reset();
 				ap_AutonTimer->Start();	
 			}
 			break;
 		case kTestArm:
 			ap_CollectorMotor->Set(1);
 			if(ap_AutonTimer->HasPeriodPassed(2.0)){
+				ap_CollectorMotor->Set(0);
 				a_currentState ++;
 				ap_AutonTimer->Stop();
 				ap_AutonTimer->Reset();

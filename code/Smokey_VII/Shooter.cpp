@@ -8,8 +8,7 @@
 
 Shooter::Shooter(unsigned int motorPort, unsigned int stopSensorPort)
 	: a_state(SHOOTER_STATE_IDLE), a_stopSensorState(true), a_reArm(true)
-{
-	ap_motor = new Talon(motorPort);
+{ ap_motor = new Talon(motorPort);
 	ap_stopSensor = new DigitalInput(stopSensorPort);
 	ap_counter = new Counter(ap_stopSensor);
 	ap_timer = new Timer();
@@ -45,11 +44,13 @@ void Shooter::UpdateControlLogic(bool shoot, bool noRearm)
 {
 	if(a_enabled){
 	ShooterState_t nextState = a_state;
+	printf("Shooter Updated\n");
 
 	switch(a_state)
 	{
 		case SHOOTER_STATE_IDLE:
 			ap_motor->Set(0.0);
+			printf("IDLE\n");
 			if(shoot) {
 				ap_counter->Reset();
 				nextState = SHOOTER_STATE_ARMING;
@@ -60,8 +61,10 @@ void Shooter::UpdateControlLogic(bool shoot, bool noRearm)
 			break;
 		case SHOOTER_STATE_ARMING:
 			ap_motor->Set(1.0);
+			printf("Arming\n");
 			if(ap_counter->Get() > 0) {
 				nextState = SHOOTER_STATE_IDLE;
+				printf("ARMED\n");
 			}
 			break;
 		case SHOOTER_STATE_NO_REARM:
