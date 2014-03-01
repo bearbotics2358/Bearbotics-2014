@@ -4,7 +4,8 @@
 #include <Joystick.h>
 #include <RobotDrive.h>
 #include <DigitalInput.h>
-#include <Math.h>
+#include <SmartDashboard.h>
+#include <math.h>
 
 #include "Smokey_VII.h"
 
@@ -73,6 +74,7 @@ Smokey_VII::~Smokey_VII(void)
 }
 
 void Smokey_VII::RobotInit(void){
+	SmartDashboard::init();
 	printf("Running Smokey %i.%i.%i\n", 
 			SMOKEY_MAJOR_VERSION,
 			SMOKEY_MINOR_VERSION,
