@@ -1,4 +1,5 @@
 #include "HotGoalDetector.h"
+#include "Prefs.h"
 
 #include <WPILib.h>
 #include <nivision.h>
@@ -10,7 +11,8 @@
 using std::cout;
 
 HotGoalDetector::HotGoalDetector(void)
-	: ap_camera(&AxisCamera::GetInstance())
+	: ap_camera(&AxisCamera::GetInstance()),
+	  a_leds(new DigitalOutput(CAMERA_LED_PORT))
 {
 }
 
@@ -34,7 +36,9 @@ void HotGoalDetector::SnapImage(void)
 	{
 		throw new std::runtime_error("No fresh image");
 	}
+	a_leds->Set(1);
 	a_image = std::auto_ptr<HSLImage>(ap_camera->GetImage());
+	a_leds->Set(0);
 }
 
 bool HotGoalDetector::DetectHotGoal(bool snapImage)

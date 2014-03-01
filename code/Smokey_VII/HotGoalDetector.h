@@ -6,6 +6,7 @@
 #include <string>
 
 class AxisCamera;
+class DigitalOutput;
 class HSLImage;
 
 class HotGoalDetector
@@ -20,6 +21,8 @@ private:
 	static void CheckIMAQError(int rval, std::string desc);
 
 	AxisCamera *ap_camera;
+	std::auto_ptr<DigitalOutput> a_leds;
+
 	std::auto_ptr<HSLImage> a_image;
 };
 
