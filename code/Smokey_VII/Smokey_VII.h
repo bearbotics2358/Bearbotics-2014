@@ -23,13 +23,10 @@ public:
 	
 	typedef enum{
 		kAutonNULL = 0,
-		kAutonIdle = 1,
-		kAutonDriveForwards = 2,
-		kAutonShoot = 3,
-		kTestMoveTo60 = 4,
-		kTestArm = 5,
-		kTestCollect = 6,
-		kTestShoot = 7,
+		kAutonMoveTo60 = 1,
+		kAutonArm = 2,
+		kAutonDriveTo6Ft = 3,
+		kAutonShoot = 4,
 	} AutonState;
 	
 	

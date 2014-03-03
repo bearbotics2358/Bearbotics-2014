@@ -37,10 +37,10 @@ Smokey_VII::Smokey_VII(void)
 	ap_CallibratingMotor = new Talon(10);
 	a_fieldOrientated = false;
 	a_currentState = 0;
-	ap_states[0] = kTestMoveTo60;
-	ap_states[1] = kTestArm;
-//	ap_states[2] = kTestCollect;
-//	ap_states[3] = kTestShoot;
+	ap_states[0] = kAutonMoveTo60;
+	ap_states[1] = kAutonArm;
+	ap_states[2] = kAutonDriveTo6Ft;
+	ap_states[3] = kAutonShoot;
 
 }
 
@@ -185,14 +185,13 @@ void Smokey_VII::AutonomousInit(void){
 	a_currentState = 0;
 	ap_Sonars->RxFlush();
 	ap_Aimer->setEnabled(true);
-	ap_Shooter->Init(false);
+	ap_Shooter->Init(true);
 	ap_AutonTimer->Reset();
 }
 
 void Smokey_VII::AutonomousPeriodic(void){
 	AutonState currentState;
-	
-	ap_Drive->MecanumDrive_Cartesian(0,0,0);	
+	bool drivn = false;
 	ap_Sonars->periodic();
 	ap_Aimer->setPID(0.054, 0.0, 0.015);
 	ap_Shooter->UpdateControlLogic(false, false);
@@ -202,37 +201,37 @@ void Smokey_VII::AutonomousPeriodic(void){
 		currentState = ap_states[a_currentState];
 		
 		switch(currentState){
-		case kAutonDriveForwards:
-			ap_Aimer->setAngle(60, 0.6);
-			ap_Drive->MecanumDrive_Cartesian(0, 0.5, 0, ap_Gyro->GetAngle());
-			if(ap_Sonars->GetDistanceFront()<= 198.12){
-				a_currentState ++;
-			}	
-			break;
-		case kAutonShoot:
-			ap_Shooter->UpdateControlLogic(true, false);
-			a_currentState ++;
-			break;
-		case kTestMoveTo60:
+		case kAutonMoveTo60:
 			ap_Aimer->setAngle(60, 1.0);
 			if(fabs(ap_Aimer->getAngle() - 60) < 5){
 				a_currentState ++;
+				ap_Shooter->SetEnabled(true);
 				ap_Shooter->UpdateControlLogic(true, false);
 				ap_AutonTimer->Reset();
 				ap_AutonTimer->Start();	
 			}
 			break;
-		case kTestArm:
+		case kAutonArm:
 			ap_CollectorMotor->Set(1);
-			if(ap_AutonTimer->HasPeriodPassed(2.0)){
+			if(ap_AutonTimer->HasPeriodPassed(1.5)){
 				ap_CollectorMotor->Set(0);
 				a_currentState ++;
 				ap_AutonTimer->Stop();
 				ap_AutonTimer->Reset();
 			}
 			break;
-		case kTestShoot:
-			ap_Shooter->UpdateControlLogic(true, false);
+		case kAutonDriveTo6Ft:
+			printf("Gyro: %f\n", ap_Gyro->GetAngle());
+			ap_Drive->ArcadeDrive(-0.2, -1 * ap_Gyro->GetAngle() * 0.03);
+			drivn = true;
+			printf("Sonars: %f\n", ap_Sonars->GetDistanceFront());
+			if(ap_Sonars->GetDistanceFront() < 6){
+				a_currentState ++;
+				ap_Shooter->UpdateControlLogic(true, false);
+			}
+			break;
+		case kAutonShoot:
+			drivn = false;
 			if(ap_Shooter->GetState() == SHOOTER_STATE_IDLE){
 				a_currentState ++;
 			}
@@ -240,7 +239,9 @@ void Smokey_VII::AutonomousPeriodic(void){
 		case kAutonNULL:
 			break;
 		}
-	}	
+	}
+	if(!drivn) ap_Drive->MecanumDrive_Cartesian(0,0,0);	
+		
 }
 
 void Smokey_VII::DisabledPeriodic(){
