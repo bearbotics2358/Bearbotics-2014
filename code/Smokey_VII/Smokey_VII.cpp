@@ -10,7 +10,7 @@
 
 #include "Smokey_VII.h"
 
-#include "Prefs.h"
+#include "CompPrefs.h"
 #include "Aimerino.h"
 #include "Shooter.h"
 #include "Sonar.h"
@@ -221,8 +221,10 @@ void Smokey_VII::AutonomousPeriodic(void){
 			}
 			break;
 		case kAutonDriveTo6Ft:
-			printf("Gyro: %f\n", ap_Gyro->GetAngle());
-			ap_Drive->ArcadeDrive(-0.2, -1 * ap_Gyro->GetAngle() * 0.03);
+		{
+			double gyroAngle = ap_Gyro->GetAngle();
+			printf("Gyro: %f\n", gyroAngle);
+			ap_Drive->ArcadeDrive(-0.2, -gyroAngle * 0.03);
 			drivn = true;
 			printf("Sonars: %f\n", ap_Sonars->GetDistanceFront());
 			if(ap_Sonars->GetDistanceFront() < 6){
@@ -230,6 +232,7 @@ void Smokey_VII::AutonomousPeriodic(void){
 				ap_Shooter->UpdateControlLogic(true, false);
 			}
 			break;
+		}
 		case kAutonShoot:
 			drivn = false;
 			if(ap_Shooter->GetState() == SHOOTER_STATE_IDLE){
