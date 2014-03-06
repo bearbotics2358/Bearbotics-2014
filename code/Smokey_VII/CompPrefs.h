@@ -1,9 +1,14 @@
-#ifndef PREFS_H
-#define PREFS_H
+#ifndef _PREFS_H_
+#define _PREFS_H_
 
 #define POT_PORT 2
 #define MAG_SENSOR_PORT 1
 #define GYRO_PORT 1
+
+#define RED_PORT 4
+#define BLUE_PORT 3
+#define GREEN_PORT 5
+
 
 #define FL_PORT 4
 #define FR_PORT 5
@@ -22,16 +27,10 @@
 
 #define COLLECTOR_POSITIVE_BUTTON 5
 #define COLLECTOR_NEGATIVE_BUTTON 3
-#define AUTO_COCK_BUTTON 11
-#define CANCEL_COCK_BUTTON 11
-#define MANUAL_COCK_POSITIVE_BUTTON 6
-#define MANUAL_COCK_NEGATIVE_BUTTON 4
-#define POSITIVE_AIM_BUTTON 10
-#define NEGATIVE_AIM_BUTTON 9
 
 #define SONAR_BAUD_RATE 38400
 
-#define AIM_OFFSET 90.0 / (4.98 - 3.48)
+#define AIM_OFFSET 90.0 / (4.985 - 3.48)
 #define AIM_SCALE 3.48
 
-#endif
+#endif //_PREFS_H_

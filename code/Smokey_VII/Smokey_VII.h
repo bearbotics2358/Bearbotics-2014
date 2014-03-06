@@ -2,8 +2,10 @@
 #define SMOKEY_VII_H
 
 #define SMOKEY_MAJOR_VERSION 7
-#define SMOKEY_MINOR_VERSION 1
+#define SMOKEY_MINOR_VERSION 3
 #define SMOKEY_MICRO_VERSION 0
+
+#include "LEDIndicator.h"
 
 class Talon;
 class Joystick;
@@ -23,10 +25,8 @@ public:
 	
 	typedef enum{
 		kAutonNULL = 0,
-		kAutonMoveTo60 = 1,
-		kAutonArm = 2,
-		kAutonDriveTo6Ft = 3,
-		kAutonShoot = 4,
+		kAutonDriveAndTilt = 1,
+		kAutonShoot = 2,
 	} AutonState;
 	
 	
@@ -63,6 +63,7 @@ private:
 	Sonar* ap_Sonars;
 	AutonState ap_states[4];
 	Timer *ap_AutonTimer;
+	LEDIndicator* ap_indicator;
 };
 
 #endif 
