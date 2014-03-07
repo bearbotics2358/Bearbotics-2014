@@ -9,6 +9,7 @@ Aimerino::Aimerino(int motorPort, int potPort, double scale, double offset)
 	ap_Motor = new Talon(motorPort);
 	ap_PID = new PIDController(0.1, 0.0, 0.0, ap_Pot, ap_Motor);
 	ap_PID->SetOutputRange(-0.6, 0.6);
+               ap_PID->SetSetpoint(90.0);
 	a_enabled = false;
 }
 
