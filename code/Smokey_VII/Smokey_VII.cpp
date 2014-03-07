@@ -98,10 +98,10 @@ void Smokey_VII::TeleopInit(void)
 {
 	printf("Teleop Init\n");
 	ap_Aimer->setEnabled(true);
+	ap_Aimer->setAngle(90.0, 1.0); // set this and static init in periodic the same
 	ap_Shooter->Init(true);
 	ap_Sonars->EnableFrontOnly();
 	ap_Sonars->RxFlush();
-	ap_Aimer->setAngle(90.0, 1.0);
 //	ap_Drive->SetInvertedMotor(ap_Drive->kFrontRightMotor, false);
 //	ap_Drive->SetInvertedMotor(ap_Drive->kFrontRightMotor, false);
 //	SmartDashboard::PutNumber("P", 0.054);
@@ -119,7 +119,7 @@ void Smokey_VII::DisabledInit()
 
 void Smokey_VII::TeleopPeriodic(void){
 	static int time = 0;
-	static double angle = 0;
+	static double angle = 90.0; // set this and static init in init the same
 	bool IncreaseCollector = ap_Joystick->GetRawButton(COLLECTOR_POSITIVE_BUTTON);
 	bool DecreaseCollector = ap_Joystick->GetRawButton(COLLECTOR_NEGATIVE_BUTTON);
 
