@@ -48,10 +48,10 @@ Smokey_VII::Smokey_VII(void)
 	a_fieldOrientated = false;
 
 	a_currentState = 0;
-	ap_states[0] = kAutonDriveAndTilt;
-	ap_states[1] = kAutonShoot;
-//	ap_states[2] = kAutonDriveTo6Ft;
-//	ap_states[3] = kAutonShoot;
+	ap_states[0] = kAutonMoveTo60;
+	ap_states[1] = kAutonArm;
+	ap_states[2] = kAutonDriveTo6Ft;
+	ap_states[3] = kAutonShoot;
 
 }
 
@@ -98,11 +98,10 @@ void Smokey_VII::TeleopInit(void)
 {
 	printf("Teleop Init\n");
 	ap_Aimer->setEnabled(true);
-	ap_Aimer->setAngle(90.0, 1.0); // set this and static init in periodic the same
 	ap_Shooter->Init(true);
 	ap_Sonars->EnableFrontOnly();
-	ap_Sonars->DisablePort(Sonar::kRightFront);
 	ap_Sonars->RxFlush();
+	ap_Aimer->setAngle(90.0, 1.0);
 //	ap_Drive->SetInvertedMotor(ap_Drive->kFrontRightMotor, false);
 //	ap_Drive->SetInvertedMotor(ap_Drive->kFrontRightMotor, false);
 //	SmartDashboard::PutNumber("P", 0.054);
@@ -120,7 +119,7 @@ void Smokey_VII::DisabledInit()
 
 void Smokey_VII::TeleopPeriodic(void){
 	static int time = 0;
-	static double angle = 90.0; // set this and static init in init the same
+	static double angle = 0;
 	bool IncreaseCollector = ap_Joystick->GetRawButton(COLLECTOR_POSITIVE_BUTTON);
 	bool DecreaseCollector = ap_Joystick->GetRawButton(COLLECTOR_NEGATIVE_BUTTON);
 
@@ -132,8 +131,8 @@ void Smokey_VII::TeleopPeriodic(void){
 	
 	double sonarDistance = ap_Sonars->GetFeet(Sonar::kLeftFront);
 
-	if(sonarDistance > 6.5) ap_indicator->setColor(0,0,0);
-	else if (sonarDistance > 4.0) ap_indicator->setColor(0,1,0);
+	if(sonarDistance > 8) ap_indicator->setColor(0,0,0);
+	else if (sonarDistance > 5) ap_indicator->setColor(0,1,0);
 	else ap_indicator->setColor(1,0,0);
 
 	printf("Front Left Sonar %f ft\n", ap_Sonars->GetFeet(Sonar::kLeftFront));
@@ -180,7 +179,7 @@ void Smokey_VII::TeleopPeriodic(void){
 
 	(angle < 80) ? 	printf("Shooting Enabled\n") :
 					printf("Shooting Disabled\n");
-	ap_Shooter->SetEnabled(angle < 81);
+	ap_Shooter->SetEnabled(angle < 80);
 	ap_Shooter->UpdateControlLogic(ap_Joystick->GetRawButton(1) && angle > -5,
 									ap_Joystick->GetRawButton(2) && angle > -5);
 
@@ -203,12 +202,9 @@ void Smokey_VII::TeleopPeriodic(void){
 void Smokey_VII::AutonomousInit(void){
 	a_currentState = 0;
 	ap_Sonars->RxFlush();
-	ap_Sonars->EnableFrontOnly();
-	ap_Sonars->DisablePort(Sonar::kRightFront);
 	ap_Aimer->setEnabled(true);
 	ap_Shooter->Init(true);
 	ap_AutonTimer->Reset();
-	ap_Gyro->Reset();
 //	ap_Drive->SetInvertedMotor(ap_Drive->kFrontRightMotor, true);
 //	ap_Drive->SetInvertedMotor(ap_Drive->kFrontRightMotor, true);
 }
@@ -224,26 +220,41 @@ void Smokey_VII::AutonomousPeriodic(void){
 		currentState = ap_states[a_currentState];
 		
 		switch(currentState){
-		case kAutonDriveAndTilt:
-		{
-			ap_Aimer->setAngle(70, 1.0);
-			printf("Sonars: %f\n", ap_Sonars->GetDistanceFront());
-
-			if(ap_Sonars->GetDistanceFront() > 8.2) { //8.7 = 6'4"
-				printf("Gyro: %f\n", ap_Gyro->GetAngle());
-				double gyroOffset = ap_Gyro->GetAngle() / 90.0;
-				ap_Drive->SetLeftRightMotorOutputs(0.4 - gyroOffset, -1 * (0.4 + gyroOffset));
-				printf("Gyro Offset: %f\n", gyroOffset);
-				drivn = true;
-			} else if(fabs(ap_Aimer->getAngle() - 70) < 5) {
+		case kAutonMoveTo60:
+			ap_Aimer->setAngle(60, 1.0);
+			if(fabs(ap_Aimer->getAngle() - 60) < 5){
 				a_currentState ++;
 				ap_Shooter->SetEnabled(true);
 				ap_Shooter->UpdateControlLogic(true, false);
+				ap_AutonTimer->Reset();
+				ap_AutonTimer->Start();	
 			}
-		}
 			break;
-
+		case kAutonArm:
+			ap_CollectorMotor->Set(1);
+			if(ap_AutonTimer->HasPeriodPassed(1.5)){
+				ap_CollectorMotor->Set(0);
+				a_currentState ++;
+				ap_AutonTimer->Stop();
+				ap_AutonTimer->Reset();
+			}
+			break;
+		case kAutonDriveTo6Ft:
+		{
+			double gyroAngle = ap_Gyro->GetAngle();
+			printf("Gyro: %f\n", gyroAngle);
+			ap_Drive->MecanumDrive_Cartesian(0,-0.4,0);	
+			ap_Drive->ArcadeDrive(-0.5, 0 * -gyroAngle * 0.03);
+			drivn = true;
+			printf("Sonars: %f\n", ap_Sonars->GetDistanceFront());
+			if(ap_Sonars->GetDistanceFront() < 2){
+				a_currentState ++;
+				ap_Shooter->UpdateControlLogic(true, false);
+			}
+			break;
+		}
 		case kAutonShoot:
+			drivn = false;
 			if(ap_Shooter->GetState() == SHOOTER_STATE_IDLE){
 				a_currentState ++;
 			}
@@ -253,11 +264,11 @@ void Smokey_VII::AutonomousPeriodic(void){
 		}
 	}
 	if(!drivn) ap_Drive->MecanumDrive_Cartesian(0,0,0);	
+		
 }
 
 void Smokey_VII::DisabledPeriodic(){
 	ap_Sonars->periodic();
-	printf("Gyro: %f\n", ap_Gyro->GetAngle());
 }
 
 START_ROBOT_CLASS(Smokey_VII);
