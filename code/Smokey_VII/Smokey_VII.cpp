@@ -50,6 +50,8 @@ Smokey_VII::Smokey_VII(void)
 	a_currentState = 0;
 	ap_states[0] = kAutonDriveAndTilt;
 	ap_states[1] = kAutonShoot;
+	ap_states[2] = kAutonNULL;
+	ap_states[3] = kAutonNULL;
 //	ap_states[2] = kAutonDriveTo6Ft;
 //	ap_states[3] = kAutonShoot;
 
@@ -248,6 +250,8 @@ void Smokey_VII::AutonomousPeriodic(void){
 				a_currentState ++;
 			}
 			break;
+
+		default:
 		case kAutonNULL:
 			break;
 		}

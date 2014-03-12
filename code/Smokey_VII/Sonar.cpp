@@ -3,6 +3,8 @@
 
 	 created 2/16/14 BD
 
+	 updated 3/11/14 BD
+	 - added past values of range to permit filtering out bad samples
 */
 
 #include "Sonar.h"
@@ -12,6 +14,7 @@
 Sonar::Sonar(int baud)
 {
 	int i;
+	int j;
 
 	sport = new SerialPort(baud);
 	sport->DisableTermination();
@@ -21,6 +24,11 @@ Sonar::Sonar(int baud)
 	rx_index = 0;
 	for(i = 0; i < SONAR_BUFF_SIZE; i++) {
 		rx_buff[i] = 0;
+	}
+	for(i = 0; i < SONAR_UNITS; i++ ) {
+		for(j = 0; j < SONAR_HISTORY_MAX; j++) {
+			range[i][j] = 0;
+		}
 	}
 }
 
@@ -33,6 +41,8 @@ void Sonar::periodic()
   // every time through loop, get command chars if available
 	// and add to rx buffer
   // when '\r' (or '\t') found, process reading
+	int i;
+
 	while(1) {
 		int ret = sport->GetBytesReceived();
 		// printf("rcvd: %d\n", ret);
@@ -51,22 +61,37 @@ void Sonar::periodic()
 //			printf("raw sonar: %s\n", rx_buff);
 			if(rx_index == 4) {
 				switch(rx_buff[0]) {
+				case 'R': // for ultrasonic unit connected directly to CRIO
 				case 'A':
-					range[0] = atoi(&rx_buff[1]);
+					for(i = SONAR_HISTORY_SIZE - 1; i > 0; i--) {
+						range[0][i] = range[0][i - 1];
+					}
+					range[0][0] = atoi(&rx_buff[1]);
 					break;
 
 				case 'B':
-					range[1] = atoi(&rx_buff[1]);
+					for(i = SONAR_HISTORY_SIZE - 1; i > 0; i--) {
+						range[1][i] = range[1][i - 1];
+					}
+					range[1][0] = atoi(&rx_buff[1]);
 					break;
 
 				case 'C':
-					range[2] = atoi(&rx_buff[1]);
+					for(i = SONAR_HISTORY_SIZE - 1; i > 0; i--) {
+						range[2][i] = range[2][i - 1];
+					}
+					range[2][0] = atoi(&rx_buff[1]);
 					break;
 
 				case 'D':
-					range[3] = atoi(&rx_buff[1]);
+					for(i = SONAR_HISTORY_SIZE - 1; i > 0; i--) {
+						range[3][i] = range[3][i - 1];
+					}
+					range[3][0] = atoi(&rx_buff[1]);
 					break;
 
+				default:
+					break;
 				}
 			}
       // reset for next command
@@ -86,12 +111,31 @@ void Sonar::periodic()
 
 int Sonar::GetCM(SensorEnum port)
 {
-	return range[port];
+	return range[port][0];
+}
+
+int Sonar::GetCMsafe(SensorEnum port)
+{
+	int ret;
+	
+	// try to determine if new reading is bogus
+	// observed bad readings are single readings, surrounded by good readings
+	// first try, compare delta readings - throw this one out if it appears
+	// too large
+	if(abs(range[port][0] - range[port][1])
+		 < 5 * abs(range[port][1] - range[port][2])) {
+		// appears ok, return this reading
+		ret = range[port][0];
+	} else {
+		// looks erroneous, use last reading
+		ret = range[port][1];
+	}
+	return ret;
 }
 
 float Sonar::GetFeet(SensorEnum port)
 {
-	return ((float)range[port])/(2.54 * 12.0);
+	return ((float)GetCMsafe(port))/(2.54 * 12.0);
 }
 
 float Sonar::GetDistanceFront()
