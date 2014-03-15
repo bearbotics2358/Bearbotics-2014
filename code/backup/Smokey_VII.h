@@ -25,8 +25,10 @@ public:
 	
 	typedef enum{
 		kAutonNULL = 0,
-		kAutonDriveAndTilt = 1,
-		kAutonShoot = 2,
+		kAutonMoveTo60 = 1,
+		kAutonArm = 2,
+		kAutonDriveTo6Ft = 3,
+		kAutonShoot = 4,
 	} AutonState;
 	
 	
