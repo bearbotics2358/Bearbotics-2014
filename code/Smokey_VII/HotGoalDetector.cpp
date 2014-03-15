@@ -4,6 +4,7 @@
 #include <WPILib.h>
 #include <nivision.h>
 
+#include <math.h>
 #include <iostream>
 #include <stdexcept>
 #include <sstream>
@@ -27,6 +28,37 @@ void HotGoalDetector::CheckIMAQError(int rval, std::string desc)
 			      << desc;
 
 		throw std::runtime_error(errorDesc.str());
+	}
+}
+
+void FilterParticles(std::vector<Particle> &particles)
+{
+	vector<Particle>::iterator it;
+	for(it = particles.begin(); it != particles.end(); )
+	{
+		Particle p = *it;
+		if(p.area < 50.0)
+		{
+			it = particles.erase(it);
+		}
+		else if(fabs(p.width - p.height) < 100.0)
+		{
+			it = particles.erase(it);
+		}
+		else
+		{
+			++it;
+		}
+	}
+}
+
+void PrintParticles(const std::vector<Particle> &particles)
+{
+	vector<Particle>::const_iterator it;
+	for(it = particles.begin(); it != particles.end(); )
+	{
+		Particle p = *it;
+		p.Print();
 	}
 }
 
@@ -79,6 +111,10 @@ bool HotGoalDetector::DetectHotGoal(bool snapImage)
 	rval = imaqEqualize(image, image, 0, 255, NULL);
 	CheckIMAQError(rval, "imaqEqualize");
 
+	// Write image to file system
+	// TODO: flag for this to happen?
+	imaqWriteJPEGFile(image, "processed-image.jpg", 750, NULL);
+
 	int numParticles;
 	rval = imaqCountParticles(image, 1, &numParticles);
 	CheckIMAQError(rval, "imaqCountParticles");
@@ -93,38 +129,33 @@ bool HotGoalDetector::DetectHotGoal(bool snapImage)
 		IMAQ_MT_AREA,
 	};
 
-	MeasureParticlesReport *particles =
+	MeasureParticlesReport *particleReport =
 		imaqMeasureParticles(image,
 			                 IMAQ_CALIBRATION_MODE_PIXEL,
 							 measures,
 							 kNumMeasures);
-	if(particles == NULL)
+	if(particleReport == NULL)
 	{
 		CheckIMAQError(0, "imaqMeasureParticles");
 	}
 
+	std::vector<Particle> particles;
 	for(int i = 0; i < numParticles; i++)
 	{
-		double x = particles->pixelMeasurements[i][0];
-		double y = particles->pixelMeasurements[i][1];
-		double w = particles->pixelMeasurements[i][2];
-		double h = particles->pixelMeasurements[i][3];
-		double a = particles->pixelMeasurements[i][4];
-
-		// Get rid of tiny stuff
-		if(a > 50.0)
-		{
-			cout << "=== PARTICLE " << i << std::endl;
-			cout << "center: (" << x << ", " << y << ")" << std::endl;
-			cout << "width/height: (" << w << ", " << h << ")" << std::endl;
-			cout << "area: " << a << endl;
-			cout << std::endl;
-		}
+		Particle p;
+		p.x      = particleReport->pixelMeasurements[i][0];
+		p.y      = particleReport->pixelMeasurements[i][1];
+		p.width  = particleReport->pixelMeasurements[i][2];
+		p.height = particleReport->pixelMeasurements[i][3];
+		p.area   = particleReport->pixelMeasurements[i][4];
+		particles.push_back(p);
 	}
+	FilterParticles(particles);
+	PrintParticles(particles);
 
 	// Cleanup
-	rval = imaqDispose(particles);
-	CheckIMAQError(rval, "imaqDispose(particles)");
+	rval = imaqDispose(particleReport);
+	CheckIMAQError(rval, "imaqDispose(particleReport)");
 
 	return rv;
 }
