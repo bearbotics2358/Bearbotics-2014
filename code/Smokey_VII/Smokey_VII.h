@@ -6,6 +6,7 @@
 #define SMOKEY_MICRO_VERSION 0
 
 #include "LEDIndicator.h"
+#include "Logger.h"
 
 class Talon;
 class Joystick;
@@ -62,8 +63,9 @@ private:
 	Talon* ap_CallibratingMotor;
 	Sonar* ap_Sonars;
 	AutonState ap_states[4];
-	Timer *ap_AutonTimer;
+	Timer* ap_AutonTimer;
 	LEDIndicator* ap_indicator;
+	Logger log_;
 };
 
 #endif 

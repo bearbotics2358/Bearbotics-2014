@@ -14,14 +14,15 @@
 #include "Aimerino.h"
 #include "Shooter.h"
 #include "Sonar.h"
+#include <cstdio>
 
 Smokey_VII::Smokey_VII(void)
+:log_("/ni-rt/system/FRC_UserFiles/kiiiiiiiwi.log")
 {
 	ap_Gyro = new Gyro(GYRO_PORT);
 
 	ap_Joystick = new Joystick(JOYSTICK_PORT);
 	ap_HedgyStick = new Joystick(HEDGYSTICK_PORT);
-
 	ap_FLmotor = new Talon(FL_PORT);
 	ap_FRmotor = new Talon(FR_PORT);
 	ap_BLmotor = new Talon(BL_PORT);
@@ -105,7 +106,8 @@ void Smokey_VII::TeleopInit(void)
 	ap_Sonars->EnableFrontOnly();
 	ap_Sonars->DisablePort(Sonar::kRightFront);
 	ap_Sonars->RxFlush();
-//	ap_Drive->SetInvertedMotor(ap_Drive->kFrontRightMotor, false);
+	log_.SetEnabled(true);
+	//	ap_Drive->SetInvertedMotor(ap_Drive->kFrontRightMotor, false);
 //	ap_Drive->SetInvertedMotor(ap_Drive->kFrontRightMotor, false);
 //	SmartDashboard::PutNumber("P", 0.054);
 //	SmartDashboard::PutNumber("I", 0.0);
@@ -116,16 +118,20 @@ void Smokey_VII::TeleopInit(void)
 void Smokey_VII::DisabledInit()
 {
 	printf("Disabled\n");
+	log_.SetEnabled(false);
 	ap_Shooter->Init(false);
 	ap_Sonars->RxFlush();
 }
 
-void Smokey_VII::TeleopPeriodic(void){
+void Smokey_VII::TeleopPeriodic(void)
+{
 	static int time = 0;
 	static double angle = 90.0; // set this and static init in init the same
 	bool IncreaseCollector = ap_Joystick->GetRawButton(COLLECTOR_POSITIVE_BUTTON);
 	bool DecreaseCollector = ap_Joystick->GetRawButton(COLLECTOR_NEGATIVE_BUTTON);
 
+	char logTemp[1024];
+	
 //	ap_Aimer->setPID(SmartDashboard::GetNumber("P"),
 //					SmartDashboard::GetNumber("I"),
 //					SmartDashboard::GetNumber("D"));
@@ -137,10 +143,10 @@ void Smokey_VII::TeleopPeriodic(void){
 	if(sonarDistance > 6.5) ap_indicator->setColor(0,0,0);
 	else if (sonarDistance > 4.0) ap_indicator->setColor(0,1,0);
 	else ap_indicator->setColor(1,0,0);
-
-	printf("Front Left Sonar %f ft\n", ap_Sonars->GetFeet(Sonar::kLeftFront));
-	printf("gyro: %f\n", ap_Gyro->GetAngle());
-
+	sprintf(logTemp,"Front Left Sonar %f ft\n", ap_Sonars->GetFeet(Sonar::kLeftFront));
+	log_.Log(logTemp);
+	sprintf(logTemp, "gyro: %f\n", ap_Gyro->GetAngle());
+	log_.Log(logTemp);
 	SmartDashboard::PutNumber("Front Left Sonar", ap_Sonars->GetFeet(Sonar::kLeftFront));
 	SmartDashboard::PutNumber("Gyro Angle", ap_Gyro->GetAngle());
 	
@@ -261,7 +267,7 @@ void Smokey_VII::AutonomousPeriodic(void){
 
 void Smokey_VII::DisabledPeriodic(){
 	ap_Sonars->periodic();
-	printf("Gyro: %f\n", ap_Gyro->GetAngle());
+	//printf("Gyro: %f\n", ap_Gyro->GetAngle());
 }
 
 START_ROBOT_CLASS(Smokey_VII);

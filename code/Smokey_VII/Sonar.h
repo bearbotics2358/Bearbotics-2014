@@ -14,6 +14,7 @@
 
 #define SONAR_BUFF_SIZE 100
 #define SONAR_HISTORY_SIZE 3
+#define SONAR_HISTORY_MAX 3
 #define SONAR_UNITS 4
 
 class Sonar
@@ -39,7 +40,7 @@ class Sonar
 	void EnableFrontOnly();
 	void EnableRearOnly();
 	void RxFlush();
-	
+	int GetCMsafe(SensorEnum port);
  private:
 	SerialPort* sport;
 	char rx_buff[SONAR_BUFF_SIZE];
