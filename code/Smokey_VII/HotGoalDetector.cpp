@@ -37,7 +37,7 @@ void HotGoalDetector::SnapImage(void)
 		throw new std::runtime_error("No fresh image");
 	}
 	a_leds->Set(1);
-	a_image = std::auto_ptr<HSLImage>(ap_camera->GetImage());
+	a_image.reset(ap_camera->GetImage());
 	a_leds->Set(0);
 }
 
@@ -52,8 +52,8 @@ bool HotGoalDetector::DetectHotGoal(bool snapImage)
 		SnapImage();
 	}
 
-	std::auto_ptr<MonoImage> mono = std::auto_ptr<MonoImage>(a_image->GetLuminancePlane());
-	std::auto_ptr<Image> imaqImage = std::auto_ptr<Image>(mono->GetImaqImage());
+	std::auto_ptr<MonoImage> mono(a_image->GetLuminancePlane());
+	std::auto_ptr<Image> imaqImage(mono->GetImaqImage());
 	Image *image = imaqImage.get();
 
 	rval = imaqGetImageSize(image, &width, &height);
