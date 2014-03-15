@@ -5,6 +5,8 @@
 #include <vector>
 #include <string>
 
+#include <DigitalOutput.h>
+
 class AxisCamera;
 class DigitalOutput;
 class HSLImage;
@@ -21,7 +23,7 @@ private:
 	static void CheckIMAQError(int rval, std::string desc);
 
 	AxisCamera *ap_camera;
-	std::auto_ptr<DigitalOutput> a_leds;
+	DigitalOutput a_leds;
 
 	std::auto_ptr<HSLImage> a_image;
 };
