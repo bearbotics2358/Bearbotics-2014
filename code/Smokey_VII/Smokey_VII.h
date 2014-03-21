@@ -49,9 +49,6 @@ private:
 	bool a_fieldOrientated;
 	AutonState ap_states[2];
 
-	Joystick joystick_;
-	Joystick hedgyStick_;
-	Gyro gyro_;
 	Talon* ap_FLmotor;
 	Talon* ap_FRmotor;
 	Talon* ap_BLmotor;
@@ -59,6 +56,9 @@ private:
 	Talon* ap_CollectorMotor;
 	RobotDrive* ap_Drive;
 	Aimerino* ap_Aimer;
+	Joystick joystick_;
+	Joystick hedgyStick_;
+	Gyro gyro_;
 	Shooter shooter_;
 	Sonar sonars_;
 	LEDIndicator indicator_;

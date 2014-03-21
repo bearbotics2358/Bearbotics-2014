@@ -83,7 +83,7 @@ void Smokey_VII::TeleopInit(void)
 	sonars_.EnableFrontOnly();
 	sonars_.DisablePort(Sonar::kRightFront);
 	sonars_.RxFlush();
-	log_.SetEnabled(true);
+	log_.InitLogging();
 	//	ap_Drive->SetInvertedMotor(ap_Drive->kFrontRightMotor, false);
 //	ap_Drive->SetInvertedMotor(ap_Drive->kFrontRightMotor, false);
 //	SmartDashboard::PutNumber("P", 0.054);
@@ -95,23 +95,24 @@ void Smokey_VII::TeleopInit(void)
 void Smokey_VII::DisabledInit()
 {
 	printf("Disabled\n");
-	log_.SetEnabled(false);
+	log_.DisableLogging();
 	shooter_.Init(false);
 	sonars_.RxFlush();
 }
 
 void Smokey_VII::TeleopPeriodic(void)
 {
+	log_.SetEnabled(true);
+	char logTemp[1024];
+	
 	static int time = 0;
 	static double angle = 90.0; // set this and static init in init the same
 	bool IncreaseCollector = joystick_.GetRawButton(COLLECTOR_POSITIVE_BUTTON);
 	bool DecreaseCollector = joystick_.GetRawButton(COLLECTOR_NEGATIVE_BUTTON);
 
-	char logTemp[1024];
 	
 	sonars_.periodic();
-	double sonarDistance = sonars_.GetFeet(Sonar::kLeftFront);
-	
+	double sonarDistance = sonars_.GetFeet(Sonar::kLeftFront);	
 
 	if(sonarDistance > 6.5) indicator_.SetColor(0,0,0);
 	else if (sonarDistance > 4.0) indicator_.SetColor(0,1,0);
@@ -181,7 +182,6 @@ void Smokey_VII::TeleopPeriodic(void)
 	}
 	printf("%f\n", ap_CallibratingMotor->Get());	
 */
-
 }
 
 void Smokey_VII::AutonomousInit(void){
@@ -192,12 +192,13 @@ void Smokey_VII::AutonomousInit(void){
 	ap_Aimer->setEnabled(true);
 	shooter_.Init(true);
 	gyro_.Reset();
-	log_.SetEnabled(true);
+	log_.InitLogging();
 	//	ap_Drive->SetInvertedMotor(ap_Drive->kFrontRightMotor, true);
 //	ap_Drive->SetInvertedMotor(ap_Drive->kFrontRightMotor, true);
 }
 
 void Smokey_VII::AutonomousPeriodic(void){
+	log_.SetEnabled(true);
 	bool drivn = false;
 	char logTemp[1024];
 	sonars_.periodic();

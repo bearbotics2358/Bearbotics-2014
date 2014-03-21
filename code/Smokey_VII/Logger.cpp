@@ -13,9 +13,9 @@ Logger::Logger(const string& fileName)
 	enabled_ = false;
 }
 
-void Logger::SetEnabled(bool enabled) 
+void Logger::InitLogging(void) 
 {
-	if(enabled && !enabled_){
+	if(!init_){
 		try {
 			logFile_.open(fileName_.c_str(), ios::app);
 		} catch (std::ofstream::failure& e) {
@@ -25,10 +25,18 @@ void Logger::SetEnabled(bool enabled)
 		}
 		Log(">>>>>>>>>>>>>>>>START LOG<<<<<<<<<<<<<<<<", false);
 	}
-	else if(!enabled && enabled_) {
+}
+
+void Logger::DisableLogging(void)
+{
+	if(init_) {
 		Log(">>>>>>>>>>>>>>>>STOP LOG<<<<<<<<<<<<<<<<", false);
 		logFile_.close();
 	}
+}
+
+void Logger::SetEnabled(bool enabled)
+{
 	enabled_ = enabled;
 }
 

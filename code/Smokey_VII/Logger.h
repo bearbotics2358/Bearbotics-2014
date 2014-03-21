@@ -9,11 +9,15 @@ class Logger
 public:
 	Logger(const std::string& fileName);
 	
+	void InitLogging(void);
+	void DisableLogging(void);
 	void SetEnabled(bool enabled);
 	int Log(const std::string& in, bool timeStamp=true);
 private:
+	bool init_;
 	bool enabled_;
 	bool error_;
+	
 	std::string fileName_;
 	ofstream logFile_;
 };
