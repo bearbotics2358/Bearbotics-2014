@@ -5,9 +5,6 @@
 #define SMOKEY_MINOR_VERSION 3
 #define SMOKEY_MICRO_VERSION 0
 
-#include "LEDIndicator.h"
-#include "Logger.h"
-
 class Talon;
 class Joystick;
 class Gyro;
@@ -17,19 +14,20 @@ class DigitalInput;
 class Sonar;
 class Timer;
 
+class LEDIndicator;
+class Logger;
 class Aimerino;
 class Shooter;
+
+enum AutonState{
+	kAutonNULL = 0,
+	kAutonDriveAndTilt = 1,
+	kAutonShoot = 2,
+};
 
 class Smokey_VII : public IterativeRobot
 {
 public:
-	
-	typedef enum{
-		kAutonNULL = 0,
-		kAutonDriveAndTilt = 1,
-		kAutonShoot = 2,
-	} AutonState;
-	
 	
 	Smokey_VII(void);
 	~Smokey_VII(void);
@@ -49,9 +47,11 @@ public:
 private:
 	int a_currentState;
 	bool a_fieldOrientated;
-	Gyro* ap_Gyro;
-	Joystick* ap_Joystick;
-	Joystick* ap_HedgyStick;
+	AutonState ap_states[2];
+
+	Joystick joystick_;
+	Joystick hedgyStick_;
+	Gyro gyro_;
 	Talon* ap_FLmotor;
 	Talon* ap_FRmotor;
 	Talon* ap_BLmotor;
@@ -59,12 +59,9 @@ private:
 	Talon* ap_CollectorMotor;
 	RobotDrive* ap_Drive;
 	Aimerino* ap_Aimer;
-	Shooter* ap_Shooter;
-	Talon* ap_CallibratingMotor;
-	Sonar* ap_Sonars;
-	AutonState ap_states[4];
-	Timer* ap_AutonTimer;
-	LEDIndicator* ap_indicator;
+	Shooter shooter_;
+	Sonar sonars_;
+	LEDIndicator indicator_;
 	Logger log_;
 };
 

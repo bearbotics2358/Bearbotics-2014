@@ -7,9 +7,9 @@ class LEDIndicator
 {
 public:
 	LEDIndicator(int redPort, int greenPort, int bluePort)
-	:red_(redPort), green_(greenPort), blue_(bluePort) {setColor(0,0,0);}
+	:red_(redPort), green_(greenPort), blue_(bluePort) {SetColor(0,0,0);}
 
-	void setColor(int red, int green, int blue);
+	void SetColor(int red, int green, int blue);
 private:
 	DigitalOutput red_;
 	DigitalOutput green_;	
