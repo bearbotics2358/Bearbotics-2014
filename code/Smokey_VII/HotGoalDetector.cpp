@@ -3,6 +3,7 @@
 
 #include <WPILib.h>
 #include <nivision.h>
+#include <networktables2/util/System.h>
 
 #include <math.h>
 #include <iostream>
@@ -12,9 +13,10 @@
 using std::cout;
 
 HotGoalDetector::HotGoalDetector(void)
-	: ap_camera(&AxisCamera::GetInstance()),
+	: ap_camera(&AxisCamera::GetInstance("10.23.58.11")),
 	  a_leds(CAMERA_LED_PORT)
 {
+	a_leds.Set(1);
 }
 
 void HotGoalDetector::CheckIMAQError(int rval, std::string desc)
@@ -31,7 +33,7 @@ void HotGoalDetector::CheckIMAQError(int rval, std::string desc)
 	}
 }
 
-void FilterParticles(std::vector<Particle> &particles)
+void HotGoalDetector::FilterParticles(std::vector<Particle> &particles)
 {
 	vector<Particle>::iterator it;
 	for(it = particles.begin(); it != particles.end(); )
@@ -52,10 +54,10 @@ void FilterParticles(std::vector<Particle> &particles)
 	}
 }
 
-void PrintParticles(const std::vector<Particle> &particles)
+void HotGoalDetector::PrintParticles(const std::vector<Particle> &particles)
 {
 	vector<Particle>::const_iterator it;
-	for(it = particles.begin(); it != particles.end(); )
+	for(it = particles.begin(); it != particles.end(); ++it)
 	{
 		Particle p = *it;
 		p.Print();
@@ -66,11 +68,13 @@ void HotGoalDetector::SnapImage(void)
 {
 	if(!ap_camera->IsFreshImage())
 	{
-		throw new std::runtime_error("No fresh image");
+		throw std::runtime_error("No fresh image");
 	}
-	a_leds.Set(1);
-	a_image.reset(ap_camera->GetImage());
 	a_leds.Set(0);
+	sleep_ms(500);
+	a_image.reset(ap_camera->GetImage());
+	sleep_ms(500);
+	a_leds.Set(1);
 }
 
 bool HotGoalDetector::DetectHotGoal(bool snapImage)

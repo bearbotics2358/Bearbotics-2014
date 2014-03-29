@@ -32,9 +32,9 @@ struct Particle
 class HotGoalDetector
 {
 public:
-	void SnapImage(void);
 	HotGoalDetector(void);
 
+	void SnapImage(void);
 	bool DetectHotGoal(bool snapImage = false);
 
 private:

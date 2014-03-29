@@ -13,7 +13,7 @@
 #define COLLECTOR_PORT 1
 #define AIMER_PORT 6
 
-#define CAMERA_LED_PORT 1
+#define CAMERA_LED_PORT 2
 
 #define PICKUP_ANGLE 
 
