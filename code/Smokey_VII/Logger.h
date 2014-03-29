@@ -19,7 +19,7 @@ private:
 	bool error_;
 	
 	std::string fileName_;
-	ofstream logFile_;
+	std::ofstream logFile_;
 };
 
 #endif
