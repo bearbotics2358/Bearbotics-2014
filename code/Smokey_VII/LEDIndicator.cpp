@@ -1,6 +1,6 @@
 #include "LEDIndicator.h"
 
-void LEDIndicator::setColor(int red, int green, int blue)
+void LEDIndicator::SetColor(int red, int green, int blue)
 {
 	red_.Set((red > 0) ? 0 : 1);
 	green_.Set((green > 0) ? 0 : 1);

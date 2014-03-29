@@ -30,7 +30,8 @@
 
 #define SONAR_BAUD_RATE 38400
 
-#define AIM_OFFSET 90.0 / (4.985 - 3.48)
-#define AIM_SCALE 3.48
+//#define AIM_OFFSET 90.0 / (4.985 - 3.48)
+#define AIM_OFFSET 90.0 / (4.682 - 2.985)
+#define AIM_SCALE 2.985
 
 #endif //_PREFS_H_

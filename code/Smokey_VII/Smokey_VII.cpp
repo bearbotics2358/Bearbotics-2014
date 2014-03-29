@@ -7,21 +7,26 @@
 #include <SmartDashboard/SmartDashboard.h>
 #include <math.h>
 #include <Timer.h>
+#include <cstdio>
 
-#include "Smokey_VII.h"
-
+#include "LEDIndicator.h"
+#include "Logger.h"
 #include "CompPrefs.h"
 #include "Aimerino.h"
 #include "Shooter.h"
 #include "Sonar.h"
 
+#include "Smokey_VII.h"
+
 Smokey_VII::Smokey_VII(void)
+:joystick_	(JOYSTICK_PORT),
+hedgyStick_	(HEDGYSTICK_PORT),
+gyro_		(GYRO_PORT),
+shooter_	(SHOOTER_PORT, MAG_SENSOR_PORT),
+sonars_		(SONAR_BAUD_RATE),
+indicator_	(RED_PORT, GREEN_PORT, BLUE_PORT),
+log_		("/ni-rt/system/FRC_UserFiles/kiiiiiiiwi.log")
 {
-	ap_Gyro = new Gyro(GYRO_PORT);
-
-	ap_Joystick = new Joystick(JOYSTICK_PORT);
-	ap_HedgyStick = new Joystick(HEDGYSTICK_PORT);
-
 	ap_FLmotor = new Talon(FL_PORT);
 	ap_FRmotor = new Talon(FR_PORT);
 	ap_BLmotor = new Talon(BL_PORT);
@@ -34,35 +39,17 @@ Smokey_VII::Smokey_VII(void)
 	ap_CollectorMotor = new Talon(COLLECTOR_PORT);
 	ap_Aimer = new Aimerino(AIMER_PORT, POT_PORT, AIM_OFFSET, AIM_SCALE);
 	ap_Aimer->setPID(0.054, 0.0, 0.015);
-	
-	ap_Shooter = new Shooter(SHOOTER_PORT, MAG_SENSOR_PORT);
-	ap_Shooter->SetVerbose(true);
 
-	ap_indicator = new LEDIndicator(RED_PORT, GREEN_PORT, BLUE_PORT);
-	ap_Sonars = new Sonar(SONAR_BAUD_RATE);
-
-	ap_AutonTimer = new Timer();
-
-//	ap_CallibratingMotor = new Talon(10);
-
+	shooter_.SetVerbose(true);
 	a_fieldOrientated = false;
 
 	a_currentState = 0;
 	ap_states[0] = kAutonDriveAndTilt;
 	ap_states[1] = kAutonShoot;
-	ap_states[2] = kAutonNULL;
-	ap_states[3] = kAutonNULL;
-//	ap_states[2] = kAutonDriveTo6Ft;
-//	ap_states[3] = kAutonShoot;
-
 }
 
 Smokey_VII::~Smokey_VII(void)
 {
-	delete ap_Gyro;
-	ap_Gyro = NULL;
-	delete ap_Joystick;
-	ap_Joystick = NULL;
 	delete ap_FLmotor;
 	ap_FLmotor = NULL;
 	delete ap_FRmotor;
@@ -77,15 +64,6 @@ Smokey_VII::~Smokey_VII(void)
 	ap_CollectorMotor = NULL;
 	delete ap_Aimer;
 	ap_Aimer = NULL;
-	delete ap_Shooter;
-	ap_Shooter = NULL;
-	delete ap_CallibratingMotor;
-	ap_CallibratingMotor = NULL;
-	delete ap_Sonars;
-	ap_Sonars = NULL;
-	delete ap_HedgyStick;
-	ap_HedgyStick = NULL;
-	
 }
 
 void Smokey_VII::RobotInit(void){
@@ -101,11 +79,12 @@ void Smokey_VII::TeleopInit(void)
 	printf("Teleop Init\n");
 	ap_Aimer->setEnabled(true);
 	ap_Aimer->setAngle(90.0, 1.0); // set this and static init in periodic the same
-	ap_Shooter->Init(true);
-	ap_Sonars->EnableFrontOnly();
-	ap_Sonars->DisablePort(Sonar::kRightFront);
-	ap_Sonars->RxFlush();
-//	ap_Drive->SetInvertedMotor(ap_Drive->kFrontRightMotor, false);
+	shooter_.Init(true);
+	sonars_.EnableFrontOnly();
+	sonars_.DisablePort(Sonar::kRightFront);
+	sonars_.RxFlush();
+	log_.InitLogging();
+	//	ap_Drive->SetInvertedMotor(ap_Drive->kFrontRightMotor, false);
 //	ap_Drive->SetInvertedMotor(ap_Drive->kFrontRightMotor, false);
 //	SmartDashboard::PutNumber("P", 0.054);
 //	SmartDashboard::PutNumber("I", 0.0);
@@ -116,137 +95,140 @@ void Smokey_VII::TeleopInit(void)
 void Smokey_VII::DisabledInit()
 {
 	printf("Disabled\n");
-	ap_Shooter->Init(false);
-	ap_Sonars->RxFlush();
+	log_.DisableLogging();
+	shooter_.Init(false);
+	sonars_.RxFlush();
 }
 
-void Smokey_VII::TeleopPeriodic(void){
+void Smokey_VII::TeleopPeriodic(void)
+{
+	log_.SetEnabled(true);
+	char logTemp[1024];
+	
 	static int time = 0;
 	static double angle = 90.0; // set this and static init in init the same
-	bool IncreaseCollector = ap_Joystick->GetRawButton(COLLECTOR_POSITIVE_BUTTON);
-	bool DecreaseCollector = ap_Joystick->GetRawButton(COLLECTOR_NEGATIVE_BUTTON);
+	bool IncreaseCollector = joystick_.GetRawButton(COLLECTOR_POSITIVE_BUTTON);
+	bool DecreaseCollector = joystick_.GetRawButton(COLLECTOR_NEGATIVE_BUTTON);
 
-//	ap_Aimer->setPID(SmartDashboard::GetNumber("P"),
-//					SmartDashboard::GetNumber("I"),
-//					SmartDashboard::GetNumber("D"));
-
-	ap_Sonars->periodic();
 	
-	double sonarDistance = ap_Sonars->GetFeet(Sonar::kLeftFront);
+	sonars_.periodic();
+	double sonarDistance = sonars_.GetFeet(Sonar::kLeftFront);	
 
-	if(sonarDistance > 6.5) ap_indicator->setColor(0,0,0);
-	else if (sonarDistance > 4.0) ap_indicator->setColor(0,1,0);
-	else ap_indicator->setColor(1,0,0);
-
-	printf("Front Left Sonar %f ft\n", ap_Sonars->GetFeet(Sonar::kLeftFront));
-	printf("gyro: %f\n", ap_Gyro->GetAngle());
-
-	SmartDashboard::PutNumber("Front Left Sonar", ap_Sonars->GetFeet(Sonar::kLeftFront));
-	SmartDashboard::PutNumber("Gyro Angle", ap_Gyro->GetAngle());
+	if(sonarDistance > 6.5) indicator_.SetColor(0,0,0);
+	else if (sonarDistance > 4.0) indicator_.SetColor(0,1,0);
+	else indicator_.SetColor(1,0,0);
+	sprintf(logTemp,"Front Left Sonar %f ft\n", sonars_.GetFeet(Sonar::kLeftFront));
+	log_.Log(logTemp);
+	sprintf(logTemp, "gyro: %f\n", gyro_.GetAngle());
+	log_.Log(logTemp);
+	SmartDashboard::PutNumber("Front Left Sonar", sonars_.GetFeet(Sonar::kLeftFront));
+	SmartDashboard::PutNumber("Gyro Angle", gyro_.GetAngle());
 	
-	if(ap_Joystick->GetRawButton(11)) 		a_fieldOrientated = false;
-	else if (ap_Joystick->GetRawButton(12)) a_fieldOrientated = true;
+	if(joystick_.GetRawButton(11)) 		a_fieldOrientated = false;
+	else if (joystick_.GetRawButton(12)) a_fieldOrientated = true;
 	
-	if(ap_Joystick->GetRawButton(4)) ap_Gyro->Reset();
+	if(joystick_.GetRawButton(4)) gyro_.Reset();
 	
 	ap_Drive->MecanumDrive_Cartesian(
-			1 * ap_Joystick->GetX(),
-			1 * ap_Joystick->GetY(),
-			1 * ap_Joystick->GetZ(),
-		a_fieldOrientated ? ap_Gyro->GetAngle() : 0);
+			1 * joystick_.GetX(),
+			1 * joystick_.GetY(),
+			1 * joystick_.GetZ(),
+		a_fieldOrientated ? gyro_.GetAngle() : 0);
 	
-	if(ap_HedgyStick->GetRawButton(6) && time > 50){
+	if(hedgyStick_.GetRawButton(6) && time > 50){
 		angle += 10;
 		time = 0;
 	}
-	if(ap_HedgyStick->GetRawButton(7) && time > 50){
+	if(hedgyStick_.GetRawButton(7) && time > 50){
 		angle -= 10;
 		time = 0;
 	}
-	if(ap_HedgyStick->GetRawButton(2)) angle = (Aimerino::DOWN);
-	if(ap_HedgyStick->GetRawButton(5)) angle = (Aimerino::PARALLEL);
-	if(ap_HedgyStick->GetRawButton(3)) angle = (Aimerino::ABOVESHOOT);
-	if(ap_HedgyStick->GetRawButton(4)) angle = (Aimerino::UP);
+	if(hedgyStick_.GetRawButton(2)) angle = (Aimerino::DOWN);
+	if(hedgyStick_.GetRawButton(5)) angle = (Aimerino::PARALLEL);
+	if(hedgyStick_.GetRawButton(3)) angle = (Aimerino::ABOVESHOOT);
+	if(hedgyStick_.GetRawButton(4)) angle = (Aimerino::UP);
 	
 	if(angle < -40) angle = -36;
 	if(angle > 95) angle = 90;	
 	ap_Aimer->setAngle(angle, 1.0);
 //	ap_Aimer->setAngle(angle, SmartDashboard::GetNumber("Speed"));
 	
-	printf("Set Angle: %f\n", angle);
-	printf("Angle: %f\n", ap_Aimer->getAngle());
+	sprintf(logTemp, "Set Angle: %f", angle);
+	log_.Log(logTemp);
+	sprintf(logTemp, "Angle: %f", ap_Aimer->getAngle());
+	log_.Log(logTemp);
 	
 	if(IncreaseCollector == DecreaseCollector)	ap_CollectorMotor->Set(0);
 	else if(IncreaseCollector)					ap_CollectorMotor->Set(1.0);	
 	else if(DecreaseCollector)					ap_CollectorMotor->Set(-1.0);	
 
-	(angle < 80) ? 	printf("Shooting Enabled\n") :
-					printf("Shooting Disabled\n");
-	ap_Shooter->SetEnabled(angle < 81);
-	ap_Shooter->UpdateControlLogic(ap_Joystick->GetRawButton(1) && angle > -5,
-									ap_Joystick->GetRawButton(2) && angle > -5);
+	(angle < 80) ? 	sprintf(logTemp, "Shooting Enabled") :
+					sprintf(logTemp, "Shooting Disabled");
+	log_.Log(logTemp);
+	shooter_.SetEnabled(angle < 81);
+	shooter_.UpdateControlLogic(joystick_.GetRawButton(1) && angle > -5,
+									joystick_.GetRawButton(2) && angle > -5);
 
 	time ++;
 	
 /* Calibration Routine
-	if(ap_Joystick->GetRawButton(1))
+	if(joystick_.GetRawButton(1))
 	{
 		ap_CallibratingMotor->Set(0);
 	}
 	else
 	{
-		ap_CallibratingMotor->Set(ap_Joystick->GetY());
+		ap_CallibratingMotor->Set(joystick_.GetY());
 	}
 	printf("%f\n", ap_CallibratingMotor->Get());	
 */
-
 }
 
 void Smokey_VII::AutonomousInit(void){
 	a_currentState = 0;
-	ap_Sonars->RxFlush();
-	ap_Sonars->EnableFrontOnly();
-	ap_Sonars->DisablePort(Sonar::kRightFront);
+	sonars_.RxFlush();
+	sonars_.EnableFrontOnly();
+	sonars_.DisablePort(Sonar::kRightFront);
 	ap_Aimer->setEnabled(true);
-	ap_Shooter->Init(true);
-	ap_AutonTimer->Reset();
-	ap_Gyro->Reset();
-//	ap_Drive->SetInvertedMotor(ap_Drive->kFrontRightMotor, true);
+	shooter_.Init(true);
+	gyro_.Reset();
+	log_.InitLogging();
+	//	ap_Drive->SetInvertedMotor(ap_Drive->kFrontRightMotor, true);
 //	ap_Drive->SetInvertedMotor(ap_Drive->kFrontRightMotor, true);
 }
 
 void Smokey_VII::AutonomousPeriodic(void){
-	AutonState currentState;
+	log_.SetEnabled(true);
 	bool drivn = false;
-	ap_Sonars->periodic();
-	ap_Shooter->UpdateControlLogic(false, false);
+	char logTemp[1024];
+	sonars_.periodic();
+	shooter_.UpdateControlLogic(false, false);
 	
 	if(a_currentState < 4){
 	
-		currentState = ap_states[a_currentState];
+		AutonState currentState = ap_states[a_currentState];
 		
 		switch(currentState){
 		case kAutonDriveAndTilt:
 		{
-			ap_Aimer->setAngle(70, 1.0);
-			printf("Sonars: %f\n", ap_Sonars->GetDistanceFront());
-
-			if(ap_Sonars->GetDistanceFront() > 8.2) { //8.7 = 6'4"
-				printf("Gyro: %f\n", ap_Gyro->GetAngle());
-				double gyroOffset = ap_Gyro->GetAngle() / 90.0;
+			ap_Aimer->setAngle(50, 1.0);
+			sprintf(logTemp, "Sonars: %f", sonars_.GetDistanceFront());
+			log_.Log(logTemp);
+			if(sonars_.GetDistanceFront() > 12.2) { //8.7 = 6'4"
+				double gyroOffset = gyro_.GetAngle() / 90.0;
 				ap_Drive->SetLeftRightMotorOutputs(0.4 - gyroOffset, -1 * (0.4 + gyroOffset));
-				printf("Gyro Offset: %f\n", gyroOffset);
 				drivn = true;
-			} else if(fabs(ap_Aimer->getAngle() - 70) < 5) {
+			} else if(fabs(ap_Aimer->getAngle() - 50) < 5) {
 				a_currentState ++;
-				ap_Shooter->SetEnabled(true);
-				ap_Shooter->UpdateControlLogic(true, false);
+				shooter_.SetEnabled(true);
+				shooter_.UpdateControlLogic(true, false);
+				log_.Log("SHOOTING");
 			}
 		}
 			break;
 
 		case kAutonShoot:
-			if(ap_Shooter->GetState() == SHOOTER_STATE_IDLE){
+			if(shooter_.GetState() == SHOOTER_STATE_IDLE){
 				a_currentState ++;
 			}
 			break;
@@ -260,8 +242,8 @@ void Smokey_VII::AutonomousPeriodic(void){
 }
 
 void Smokey_VII::DisabledPeriodic(){
-	ap_Sonars->periodic();
-	printf("Gyro: %f\n", ap_Gyro->GetAngle());
+	sonars_.periodic();
+	//printf("Gyro: %f\n", gyro_.GetAngle());
 }
 
 START_ROBOT_CLASS(Smokey_VII);
