@@ -14,7 +14,7 @@ class DigitalInput;
 class Sonar;
 class Timer;
 
-class LEDIndicator;
+class LEDIndicator_I2C;
 class Logger;
 class Aimerino;
 class Shooter;
@@ -62,7 +62,7 @@ private:
 	Gyro gyro_;
 	Shooter shooter_;
 	Sonar sonars_;
-	LEDIndicator indicator_;
+	LEDIndicator_I2C m_indicator;
 	Logger log_;
 	HotGoalDetector detector_;
 };

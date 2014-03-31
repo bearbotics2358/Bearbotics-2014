@@ -10,7 +10,7 @@
 #include <cstdio>
 #include <stdexcept>
 
-#include "LEDIndicator.h"
+#include "LEDIndicator_I2C.h"
 #include "Logger.h"
 #include "CompPrefs.h"
 #include "Aimerino.h"
@@ -26,7 +26,7 @@ Smokey_VII::Smokey_VII(void)
 	  gyro_			(GYRO_PORT),
 	  shooter_		(SHOOTER_PORT, MAG_SENSOR_PORT),
 	  sonars_		(SONAR_BAUD_RATE),
-	  indicator_	(RED_PORT, GREEN_PORT, BLUE_PORT),
+	  m_indicator	(2),
 	  log_			("/ni-rt/system/FRC_UserFiles/kiiiiiiiwi.log"),
 	  detector_		()
 {
@@ -117,9 +117,9 @@ void Smokey_VII::TeleopPeriodic(void)
 	sonars_.periodic();
 	double sonarDistance = sonars_.GetFeet(Sonar::kLeftFront);	
 
-	if(sonarDistance > 6.5) indicator_.SetColor(0,0,0);
-	else if (sonarDistance > 4.0) indicator_.SetColor(0,1,0);
-	else indicator_.SetColor(1,0,0);
+	if(sonarDistance > 6.5) m_indicator.SetColor(0,0,0);
+	else if (sonarDistance > 4.0) m_indicator.SetColor(0,100,0);
+	else m_indicator.SetColor(100,0,0);
 	sprintf(logTemp,"Front Left Sonar %f ft\n", sonars_.GetFeet(Sonar::kLeftFront));
 	log_.Log(logTemp);
 	sprintf(logTemp, "gyro: %f\n", gyro_.GetAngle());
