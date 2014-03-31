@@ -8,6 +8,7 @@
 #include <math.h>
 #include <Timer.h>
 #include <cstdio>
+#include <stdexcept>
 
 #include "LEDIndicator.h"
 #include "Logger.h"
@@ -15,17 +16,19 @@
 #include "Aimerino.h"
 #include "Shooter.h"
 #include "Sonar.h"
+#include "HotGoalDetector.h"
 
 #include "Smokey_VII.h"
 
 Smokey_VII::Smokey_VII(void)
-:joystick_	(JOYSTICK_PORT),
-hedgyStick_	(HEDGYSTICK_PORT),
-gyro_		(GYRO_PORT),
-shooter_	(SHOOTER_PORT, MAG_SENSOR_PORT),
-sonars_		(SONAR_BAUD_RATE),
-indicator_	(RED_PORT, GREEN_PORT, BLUE_PORT),
-log_		("/ni-rt/system/FRC_UserFiles/kiiiiiiiwi.log")
+	: joystick_		(JOYSTICK_PORT),
+	  hedgyStick_	(HEDGYSTICK_PORT),
+	  gyro_			(GYRO_PORT),
+	  shooter_		(SHOOTER_PORT, MAG_SENSOR_PORT),
+	  sonars_		(SONAR_BAUD_RATE),
+	  indicator_	(RED_PORT, GREEN_PORT, BLUE_PORT),
+	  log_			("/ni-rt/system/FRC_UserFiles/kiiiiiiiwi.log"),
+	  detector_		()
 {
 	ap_FLmotor = new Talon(FL_PORT);
 	ap_FRmotor = new Talon(FR_PORT);
@@ -126,6 +129,15 @@ void Smokey_VII::TeleopPeriodic(void)
 	
 	if(joystick_.GetRawButton(11)) 		a_fieldOrientated = false;
 	else if (joystick_.GetRawButton(12)) a_fieldOrientated = true;
+
+	try
+	{
+		if(joystick_.GetRawButton(9)) detector_.DetectHotGoal(true);
+	}
+	catch(std::runtime_error &ex)
+	{
+		printf("runtime_error: %s\n", ex.what());
+	}
 	
 	if(joystick_.GetRawButton(4)) gyro_.Reset();
 	

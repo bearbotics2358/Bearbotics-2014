@@ -18,6 +18,7 @@ class LEDIndicator;
 class Logger;
 class Aimerino;
 class Shooter;
+class HotGoalDetector;
 
 enum AutonState{
 	kAutonNULL = 0,
@@ -63,6 +64,7 @@ private:
 	Sonar sonars_;
 	LEDIndicator indicator_;
 	Logger log_;
+	HotGoalDetector detector_;
 };
 
 #endif 
