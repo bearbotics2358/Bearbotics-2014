@@ -21,14 +21,15 @@
 #include "Smokey_VII.h"
 
 Smokey_VII::Smokey_VII(void)
-	: joystick_		(JOYSTICK_PORT),
-	  hedgyStick_	(HEDGYSTICK_PORT),
-	  gyro_			(GYRO_PORT),
-	  shooter_		(SHOOTER_PORT, MAG_SENSOR_PORT),
-	  sonars_		(SONAR_BAUD_RATE),
-	  m_indicator	(2),
-	  log_			("/ni-rt/system/FRC_UserFiles/kiiiiiiiwi.log"),
-	  detector_		()
+	:joystick_	(JOYSTICK_PORT),
+	hedgyStick_	(HEDGYSTICK_PORT),
+	gyro_		(GYRO_PORT),
+	shooter_	(SHOOTER_PORT, MAG_SENSOR_PORT),
+	sonars_		(SONAR_BAUD_RATE),
+	m_indicator	(1),
+	log_		("/ni-rt/system/FRC_UserFiles/kiiiiiiiwi.log"),
+	m_timer		()
+//	  detector_		()
 {
 	ap_FLmotor = new Talon(FL_PORT);
 	ap_FRmotor = new Talon(FR_PORT);
@@ -45,10 +46,6 @@ Smokey_VII::Smokey_VII(void)
 
 	shooter_.SetVerbose(true);
 	a_fieldOrientated = false;
-
-	a_currentState = 0;
-	ap_states[0] = kAutonDriveAndTilt;
-	ap_states[1] = kAutonShoot;
 }
 
 Smokey_VII::~Smokey_VII(void)
@@ -117,9 +114,25 @@ void Smokey_VII::TeleopPeriodic(void)
 	sonars_.periodic();
 	double sonarDistance = sonars_.GetFeet(Sonar::kLeftFront);	
 
-	if(sonarDistance > 6.5) m_indicator.SetColor(0,0,0);
+	const int maxColor = 150;
+	static int r = 0;
+	static int g = 50;
+	static int b = 100;
+	static int ri = 3;
+	static int gi = 2;
+	static int bi = 1;
+	if(joystick_.GetRawButton(9)) {
+		r += ri;
+		g += gi;
+		b += bi;
+		if(r > maxColor || r < 5) ri *= -1;
+		if(g > maxColor || g < 5) gi *= -1;
+		if(b > maxColor || b < 5) bi *= -1;
+		m_indicator.SetColor(r, g, b);
+	} else if(sonarDistance > 6.5) m_indicator.SetColor(0,0,0);
 	else if (sonarDistance > 4.0) m_indicator.SetColor(0,100,0);
 	else m_indicator.SetColor(100,0,0);
+	
 	sprintf(logTemp,"Front Left Sonar %f ft\n", sonars_.GetFeet(Sonar::kLeftFront));
 	log_.Log(logTemp);
 	sprintf(logTemp, "gyro: %f\n", gyro_.GetAngle());
@@ -130,14 +143,14 @@ void Smokey_VII::TeleopPeriodic(void)
 	if(joystick_.GetRawButton(11)) 		a_fieldOrientated = false;
 	else if (joystick_.GetRawButton(12)) a_fieldOrientated = true;
 
-	try
-	{
-		if(joystick_.GetRawButton(9)) detector_.DetectHotGoal(true);
-	}
-	catch(std::runtime_error &ex)
-	{
-		printf("runtime_error: %s\n", ex.what());
-	}
+//	try
+//	{
+//		if(joystick_.GetRawButton(9)) detector_.DetectHotGoal(true);
+//	}
+//	catch(std::runtime_error &ex)
+//	{
+//	/	printf("runtime_error: %s\n", ex.what());
+//	}
 	
 	if(joystick_.GetRawButton(4)) gyro_.Reset();
 	
@@ -197,7 +210,7 @@ void Smokey_VII::TeleopPeriodic(void)
 }
 
 void Smokey_VII::AutonomousInit(void){
-	a_currentState = 0;
+	m_currentState = kAutonDelay;
 	sonars_.RxFlush();
 	sonars_.EnableFrontOnly();
 	sonars_.DisablePort(Sonar::kRightFront);
@@ -211,45 +224,58 @@ void Smokey_VII::AutonomousInit(void){
 
 void Smokey_VII::AutonomousPeriodic(void){
 	log_.SetEnabled(true);
+	
+	AutonState nextState;
 	bool drivn = false;
 	char logTemp[1024];
 	sonars_.periodic();
 	shooter_.UpdateControlLogic(false, false);
-	
-	if(a_currentState < 4){
-	
-		AutonState currentState = ap_states[a_currentState];
 		
-		switch(currentState){
-		case kAutonDriveAndTilt:
-		{
-			ap_Aimer->setAngle(50, 1.0);
-			sprintf(logTemp, "Sonars: %f", sonars_.GetDistanceFront());
-			log_.Log(logTemp);
-			if(sonars_.GetDistanceFront() > 12.2) { //8.7 = 6'4"
-				double gyroOffset = gyro_.GetAngle() / 90.0;
-				ap_Drive->SetLeftRightMotorOutputs(0.4 - gyroOffset, -1 * (0.4 + gyroOffset));
-				drivn = true;
-			} else if(fabs(ap_Aimer->getAngle() - 50) < 5) {
-				a_currentState ++;
+	switch(m_currentState){
+	case kAutonDelay:
+		if(m_timer.HasPeriodPassed(1.5)){
+			if(true) {
+				nextState = kAutonDriveAndTilt;
+			} else {
+				nextState = kAutonWaitForHotZone;
+			}
+		}
+		break;
+	case kAutonWaitForHotZone:
+		if(m_timer.HasPeriodPassed(5.0)) {
+			nextState = kAutonDriveAndTilt;
+		}
+		break;
+	case kAutonDriveAndTilt:
+	{
+		ap_Aimer->setAngle(50, 1.0);
+		sprintf(logTemp, "Sonars: %f", sonars_.GetDistanceFront());
+		log_.Log(logTemp);
+		if(sonars_.GetDistanceFront() > 12.2) { //8.7 = 6'4"
+			double gyroOffset = gyro_.GetAngle() / 90.0;
+			ap_Drive->SetLeftRightMotorOutputs(0.4 - gyroOffset, -1 * (0.4 + gyroOffset));
+			drivn = true;
+		} else {
+			m_indicator.SetColor(0, 100, 0);
+			if(fabs(ap_Aimer->getAngle() - 50) < 5) {
+				nextState = kAutonShoot;
 				shooter_.SetEnabled(true);
 				shooter_.UpdateControlLogic(true, false);
 				log_.Log("SHOOTING");
 			}
 		}
-			break;
-
-		case kAutonShoot:
-			if(shooter_.GetState() == SHOOTER_STATE_IDLE){
-				a_currentState ++;
-			}
-			break;
-
-		default:
-		case kAutonNULL:
-			break;
-		}
 	}
+		break;
+	case kAutonShoot:
+		if(shooter_.GetState() == SHOOTER_STATE_IDLE){
+			nextState = kAutonNULL;
+		}
+		break;
+		default:
+	case kAutonNULL:
+		break;
+	}
+	m_currentState = nextState;
 	if(!drivn) ap_Drive->MecanumDrive_Cartesian(0,0,0);	
 }
 

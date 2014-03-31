@@ -24,6 +24,8 @@ enum AutonState{
 	kAutonNULL = 0,
 	kAutonDriveAndTilt = 1,
 	kAutonShoot = 2,
+	kAutonDelay = 3,
+	kAutonWaitForHotZone = 4,
 };
 
 class Smokey_VII : public IterativeRobot
@@ -46,9 +48,8 @@ public:
 	void DisabledPeriodic(void);
 
 private:
-	int a_currentState;
 	bool a_fieldOrientated;
-	AutonState ap_states[2];
+	AutonState m_currentState;
 
 	Talon* ap_FLmotor;
 	Talon* ap_FRmotor;
@@ -64,7 +65,8 @@ private:
 	Sonar sonars_;
 	LEDIndicator_I2C m_indicator;
 	Logger log_;
-	HotGoalDetector detector_;
+	Timer m_timer;
+	//HotGoalDetector detector_;
 };
 
 #endif 
