@@ -98,6 +98,7 @@ void Smokey_VII::DisabledInit()
 	log_.DisableLogging();
 	shooter_.Init(false);
 	sonars_.RxFlush();
+	m_indicator.SetColor(0, 0, 100);
 }
 
 void Smokey_VII::TeleopPeriodic(void)
@@ -218,6 +219,8 @@ void Smokey_VII::AutonomousInit(void){
 	shooter_.Init(true);
 	gyro_.Reset();
 	log_.InitLogging();
+	m_timer.Reset();
+	m_timer.Start();
 	//	ap_Drive->SetInvertedMotor(ap_Drive->kFrontRightMotor, true);
 //	ap_Drive->SetInvertedMotor(ap_Drive->kFrontRightMotor, true);
 }
