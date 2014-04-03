@@ -192,6 +192,7 @@ void Smokey_VII::TeleopPeriodic(void)
 					sprintf(logTemp, "Shooting Disabled");
 	log_.Log(logTemp);
 	shooter_.SetEnabled(angle < 81);
+	if(joystick_.GetRawButton(1) && angle > -5) log_.Log("Shooting");
 	shooter_.UpdateControlLogic(joystick_.GetRawButton(1) && angle > -5,
 									joystick_.GetRawButton(2) && angle > -5);
 
