@@ -218,9 +218,13 @@ void Smokey_VII::AutonomousInit(void){
 	ap_Aimer->setEnabled(true);
 	shooter_.Init(true);
 	gyro_.Reset();
+
+	// Start logging
 	log_.InitLogging();
-	m_timer.Reset();
-	m_timer.Start();
+
+	// Turn off the LED at the beginning of autonomous
+	m_indicator.SetColor(0, 0, 0);
+
 	//	ap_Drive->SetInvertedMotor(ap_Drive->kFrontRightMotor, true);
 //	ap_Drive->SetInvertedMotor(ap_Drive->kFrontRightMotor, true);
 }
@@ -236,16 +240,18 @@ void Smokey_VII::AutonomousPeriodic(void){
 		
 	switch(m_currentState){
 	case kAutonDelay:
-		if(m_timer.HasPeriodPassed(1.5)){
-			if(true) {
-				nextState = kAutonDriveAndTilt;
-			} else {
-				nextState = kAutonWaitForHotZone;
-			}
+		if(detector_.DetectHotGoal(true, true, true) || true) {
+			nextState = kAutonDriveAndTilt;
+		} else {
+			m_timer.Reset();
+			m_timer.Start();
+			nextState = kAutonWaitForHotZone;
 		}
 		break;
 	case kAutonWaitForHotZone:
 		if(m_timer.HasPeriodPassed(5.0)) {
+			m_timer.Stop();
+			m_timer.Reset();
 			nextState = kAutonDriveAndTilt;
 		}
 		break;
