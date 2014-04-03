@@ -28,7 +28,7 @@ Smokey_VII::Smokey_VII(void)
 	  sonars_		(SONAR_BAUD_RATE),
 	  indicator_	(RED_PORT, GREEN_PORT, BLUE_PORT),
 	  log_			("/ni-rt/system/FRC_UserFiles/kiiiiiiiwi.log"),
-	  detector_		()
+	  detector_		(&log_)
 {
 	ap_FLmotor = new Talon(FL_PORT);
 	ap_FRmotor = new Talon(FR_PORT);
