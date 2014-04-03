@@ -28,8 +28,8 @@ Smokey_VII::Smokey_VII(void)
 	sonars_		(SONAR_BAUD_RATE),
 	m_indicator	(1),
 	log_		("/ni-rt/system/FRC_UserFiles/kiiiiiiiwi.log"),
-	m_timer		()
-//	  detector_		()
+	m_timer		(),
+	detector_		(&log_)
 {
 	ap_FLmotor = new Talon(FL_PORT);
 	ap_FRmotor = new Talon(FR_PORT);
@@ -143,14 +143,14 @@ void Smokey_VII::TeleopPeriodic(void)
 	if(joystick_.GetRawButton(11)) 		a_fieldOrientated = false;
 	else if (joystick_.GetRawButton(12)) a_fieldOrientated = true;
 
-//	try
-//	{
-//		if(joystick_.GetRawButton(9)) detector_.DetectHotGoal(true);
-//	}
-//	catch(std::runtime_error &ex)
-//	{
-//	/	printf("runtime_error: %s\n", ex.what());
-//	}
+	try
+	{
+		if(joystick_.GetRawButton(9)) detector_.DetectHotGoal(true, true, true);
+	}
+	catch(std::runtime_error &ex)
+	{
+		printf("runtime_error: %s\n", ex.what());
+	}
 	
 	if(joystick_.GetRawButton(4)) gyro_.Reset();
 	

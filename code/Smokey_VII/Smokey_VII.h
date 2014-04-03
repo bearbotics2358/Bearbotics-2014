@@ -66,7 +66,7 @@ private:
 	LEDIndicator_I2C m_indicator;
 	Logger log_;
 	Timer m_timer;
-	//HotGoalDetector detector_;
+	HotGoalDetector detector_;
 };
 
 #endif 

@@ -1,8 +1,8 @@
 #include "HotGoalDetector.h"
 #include "Prefs.h"
+#include "Logger.h"
 
 #include <WPILib.h>
-#include <nivision.h>
 #include <networktables2/util/System.h>
 
 #include <math.h>
@@ -12,9 +12,10 @@
 
 using std::cout;
 
-HotGoalDetector::HotGoalDetector(void)
+HotGoalDetector::HotGoalDetector(Logger *const logger)
 	: ap_camera(&AxisCamera::GetInstance("10.23.58.11")),
-	  a_leds(CAMERA_LED_PORT)
+	  a_leds(CAMERA_LED_PORT),
+	  ap_logger(logger)
 {
 	a_leds.Set(1);
 }
@@ -31,6 +32,51 @@ void HotGoalDetector::CheckIMAQError(int rval, std::string desc)
 
 		throw std::runtime_error(errorDesc.str());
 	}
+}
+
+std::vector<Particle> HotGoalDetector::GenerateParticleReport(Image *image)
+{
+	int rval, numParticles;
+	rval = imaqCountParticles(image, 1, &numParticles);
+	CheckIMAQError(rval, "imaqCountParticles");
+
+	const int kNumMeasures = 5;
+	MeasurementType measures[kNumMeasures] =
+	{
+		IMAQ_MT_CENTER_OF_MASS_X,
+		IMAQ_MT_CENTER_OF_MASS_Y,
+		IMAQ_MT_BOUNDING_RECT_WIDTH,
+		IMAQ_MT_BOUNDING_RECT_HEIGHT,
+		IMAQ_MT_AREA,
+	};
+
+	MeasureParticlesReport *particleReport =
+		imaqMeasureParticles(image,
+			                 IMAQ_CALIBRATION_MODE_PIXEL,
+							 measures,
+							 kNumMeasures);
+	if(particleReport == NULL)
+	{
+		CheckIMAQError(0, "imaqMeasureParticles");
+	}
+
+	std::vector<Particle> particles;
+	for(int i = 0; i < numParticles; i++)
+	{
+		Particle p;
+		p.x      = particleReport->pixelMeasurements[i][0];
+		p.y      = particleReport->pixelMeasurements[i][1];
+		p.width  = particleReport->pixelMeasurements[i][2];
+		p.height = particleReport->pixelMeasurements[i][3];
+		p.area   = particleReport->pixelMeasurements[i][4];
+		particles.push_back(p);
+	}
+
+	// Cleanup
+	rval = imaqDispose(particleReport);
+	CheckIMAQError(rval, "imaqDispose(particleReport)");
+
+	return particles;
 }
 
 void HotGoalDetector::FilterParticles(std::vector<Particle> &particles)
@@ -64,6 +110,16 @@ void HotGoalDetector::PrintParticles(const std::vector<Particle> &particles)
 	}
 }
 
+void HotGoalDetector::LogParticles(const std::vector<Particle> &particles)
+{
+	vector<Particle>::const_iterator it;
+	for(it = particles.begin(); it != particles.end(); ++it)
+	{
+		Particle p = *it;
+		p.Log(ap_logger);
+	}
+}
+
 void HotGoalDetector::SnapImage(void)
 {
 	if(!ap_camera->IsFreshImage())
@@ -77,7 +133,7 @@ void HotGoalDetector::SnapImage(void)
 	a_leds.Set(1);
 }
 
-bool HotGoalDetector::DetectHotGoal(bool snapImage)
+bool HotGoalDetector::DetectHotGoal(bool snapImage, bool saveImage, bool logReport)
 {
 	bool rv = false;
 	int rval;
@@ -116,50 +172,18 @@ bool HotGoalDetector::DetectHotGoal(bool snapImage)
 	CheckIMAQError(rval, "imaqEqualize");
 
 	// Write image to file system
-	// TODO: flag for this to happen?
-	imaqWriteJPEGFile(image, "processed-image.jpg", 750, NULL);
-
-	int numParticles;
-	rval = imaqCountParticles(image, 1, &numParticles);
-	CheckIMAQError(rval, "imaqCountParticles");
-
-	const int kNumMeasures = 5;
-	MeasurementType measures[kNumMeasures] =
+	if(saveImage)
 	{
-		IMAQ_MT_CENTER_OF_MASS_X,
-		IMAQ_MT_CENTER_OF_MASS_Y,
-		IMAQ_MT_BOUNDING_RECT_WIDTH,
-		IMAQ_MT_BOUNDING_RECT_HEIGHT,
-		IMAQ_MT_AREA,
-	};
-
-	MeasureParticlesReport *particleReport =
-		imaqMeasureParticles(image,
-			                 IMAQ_CALIBRATION_MODE_PIXEL,
-							 measures,
-							 kNumMeasures);
-	if(particleReport == NULL)
-	{
-		CheckIMAQError(0, "imaqMeasureParticles");
+		imaqWriteJPEGFile(image, "processed-image.jpg", 750, NULL);
 	}
 
-	std::vector<Particle> particles;
-	for(int i = 0; i < numParticles; i++)
-	{
-		Particle p;
-		p.x      = particleReport->pixelMeasurements[i][0];
-		p.y      = particleReport->pixelMeasurements[i][1];
-		p.width  = particleReport->pixelMeasurements[i][2];
-		p.height = particleReport->pixelMeasurements[i][3];
-		p.area   = particleReport->pixelMeasurements[i][4];
-		particles.push_back(p);
-	}
+	std::vector<Particle> particles = GenerateParticleReport(image);
 	FilterParticles(particles);
-	PrintParticles(particles);
-
-	// Cleanup
-	rval = imaqDispose(particleReport);
-	CheckIMAQError(rval, "imaqDispose(particleReport)");
+	if(logReport)
+	{
+		PrintParticles(particles);
+		LogParticles(particles);
+	}
 
 	return rv;
 }
