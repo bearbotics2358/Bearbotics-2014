@@ -133,7 +133,7 @@ void HotGoalDetector::SnapImage(void)
 	a_leds.Set(1);
 }
 
-bool HotGoalDetector::DetectHotGoal(bool snapImage)
+bool HotGoalDetector::DetectHotGoal(bool snapImage, bool saveImage, bool logReport)
 {
 	bool rv = false;
 	int rval;
@@ -172,13 +172,18 @@ bool HotGoalDetector::DetectHotGoal(bool snapImage)
 	CheckIMAQError(rval, "imaqEqualize");
 
 	// Write image to file system
-	// TODO: flag for this to happen?
-	imaqWriteJPEGFile(image, "processed-image.jpg", 750, NULL);
+	if(saveImage)
+	{
+		imaqWriteJPEGFile(image, "processed-image.jpg", 750, NULL);
+	}
 
 	std::vector<Particle> particles = GenerateParticleReport(image);
 	FilterParticles(particles);
-	PrintParticles(particles);
-	LogParticles(particles);
+	if(logReport)
+	{
+		PrintParticles(particles);
+		LogParticles(particles);
+	}
 
 	return rv;
 }

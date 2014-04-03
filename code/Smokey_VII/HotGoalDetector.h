@@ -50,7 +50,7 @@ public:
 	HotGoalDetector(Logger *const logger);
 
 	void SnapImage(void);
-	bool DetectHotGoal(bool snapImage = false);
+	bool DetectHotGoal(bool snapImage = false, bool saveImage = false, bool logReport = false);
 
 private:
 	static void CheckIMAQError(int rval, std::string desc);

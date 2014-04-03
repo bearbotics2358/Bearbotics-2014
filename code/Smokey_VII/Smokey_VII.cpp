@@ -132,7 +132,7 @@ void Smokey_VII::TeleopPeriodic(void)
 
 	try
 	{
-		if(joystick_.GetRawButton(9)) detector_.DetectHotGoal(true);
+		if(joystick_.GetRawButton(9)) detector_.DetectHotGoal(true, true, true);
 	}
 	catch(std::runtime_error &ex)
 	{
