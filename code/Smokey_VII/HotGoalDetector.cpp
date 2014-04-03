@@ -64,6 +64,7 @@ std::vector<Particle> HotGoalDetector::GenerateParticleReport(Image *image)
 	for(int i = 0; i < numParticles; i++)
 	{
 		Particle p;
+		p.id     = i;
 		p.x      = particleReport->pixelMeasurements[i][0];
 		p.y      = particleReport->pixelMeasurements[i][1];
 		p.width  = particleReport->pixelMeasurements[i][2];
