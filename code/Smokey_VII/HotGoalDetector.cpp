@@ -127,9 +127,9 @@ void HotGoalDetector::SnapImage(void)
 		throw std::runtime_error("No fresh image");
 	}
 	a_leds.Set(0);
-	sleep_ms(500);
+	sleep_ms(250);
 	a_image.reset(ap_camera->GetImage());
-	sleep_ms(500);
+	sleep_ms(50);
 	a_leds.Set(1);
 }
 
