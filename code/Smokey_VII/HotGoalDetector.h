@@ -20,16 +20,16 @@ struct Particle
 {
 	int id;
 	double cx, cy;
-	double left, top;
+	double left, top, right;
 	double width, height;
 	double area;
 	bool horizontal;
 
-	void Print(void)
+	void Print( void )
 	{
 		std::cout << "=== PARTICLE " << id << std::endl;
 		std::cout << "center: (" << cx << ", " << cy << ")" << std::endl;
-		std::cout << "left: " << left << ", top: " << top << std::endl;
+		std::cout << "left: " << left << ", top: " << top << ", right: " << right << std::endl;
 		std::cout << "width/height: (" << width << ", " << height << ")" << std::endl;
 		std::cout << "area: " << area << std::endl;
 		std::cout << std::endl;
@@ -40,7 +40,7 @@ struct Particle
 		std::ostringstream ss;
 		ss << "=== PARTICLE " << id << std::endl;
 		ss << "center: (" << cx << ", " << cy << ")" << std::endl;
-		ss << "left: " << left << ", top: " << top << std::endl;
+		ss << "left: " << left << ", top: " << top << ", right: " << right << std::endl;
 		ss << "width/height: (" << width << ", " << height << ")" << std::endl;
 		ss << "area: " << area << std::endl;
 		ss << std::endl;
