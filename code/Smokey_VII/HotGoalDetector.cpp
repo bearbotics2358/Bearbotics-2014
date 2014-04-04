@@ -40,11 +40,13 @@ std::vector<Particle> HotGoalDetector::GenerateParticleReport(Image *image)
 	rval = imaqCountParticles(image, 1, &numParticles);
 	CheckIMAQError(rval, "imaqCountParticles");
 
-	const int kNumMeasures = 5;
+	const int kNumMeasures = 7;
 	MeasurementType measures[kNumMeasures] =
 	{
 		IMAQ_MT_CENTER_OF_MASS_X,
 		IMAQ_MT_CENTER_OF_MASS_Y,
+		IMAQ_MT_BOUNDING_RECT_LEFT,
+		IMAQ_MT_BOUNDING_RECT_TOP,
 		IMAQ_MT_BOUNDING_RECT_WIDTH,
 		IMAQ_MT_BOUNDING_RECT_HEIGHT,
 		IMAQ_MT_AREA,
@@ -64,12 +66,15 @@ std::vector<Particle> HotGoalDetector::GenerateParticleReport(Image *image)
 	for(int i = 0; i < numParticles; i++)
 	{
 		Particle p;
-		p.id     = i;
-		p.x      = particleReport->pixelMeasurements[i][0];
-		p.y      = particleReport->pixelMeasurements[i][1];
-		p.width  = particleReport->pixelMeasurements[i][2];
-		p.height = particleReport->pixelMeasurements[i][3];
-		p.area   = particleReport->pixelMeasurements[i][4];
+		p.id         = i;
+		p.cx         = particleReport->pixelMeasurements[i][0];
+		p.cy         = particleReport->pixelMeasurements[i][1];
+		p.left       = particleReport->pixelMeasurements[i][2];
+		p.top        = particleReport->pixelMeasurements[i][3];
+		p.width      = particleReport->pixelMeasurements[i][4];
+		p.height     = particleReport->pixelMeasurements[i][5];
+		p.area       = particleReport->pixelMeasurements[i][6];
+		p.horizontal = (p.width > p.height);
 		particles.push_back(p);
 	}
 
@@ -184,6 +189,64 @@ bool HotGoalDetector::DetectHotGoal(bool snapImage, bool saveImage, bool logRepo
 	{
 		PrintParticles(particles);
 		LogParticles(particles);
+	}
+
+	vector<Particle>::const_iterator it;
+	for(it = particles.begin(); it != particles.end(); ++it)
+	{
+		Particle p = *it;
+
+		// Only look for vertical (static) targets
+		if(p.horizontal)
+		{
+			continue;
+		}
+
+		// The targets should be pretty long and thin
+		double vRectPct = p.width / p.height;
+		if(vRectPct > 0.30)
+		{
+			continue;
+		}
+		
+		vector<Particle>::const_iterator it2;
+		for(it2 = particles.begin(); it2 != particles.end(); ++it2)
+		{
+			Particle p2 = *it2;
+
+			// Only examine horizontal targets
+			if(!p2.horizontal)
+			{
+				continue;
+			}
+
+			// The targets should be pretty long and thin
+			double hRectPct = p.height / p.width;
+			if(hRectPct > 0.35)
+			{
+				continue;
+			}
+
+			// The vision targets are very close in
+			// terms of their vertical tops
+			double heightDiff = fabs(p2.top - p.top);
+			if(heightDiff > 15.0)
+			{
+				continue;
+			}
+			
+			// They should also be pretty close (though
+			// not as close) in terms of their leftmost
+			// pixels
+			double leftDiff = fabs(p2.left - p.left);
+			if(leftDiff > 35.0)
+			{
+				continue;
+			}
+
+			// Fairly certain of a match at this point
+			rv = true;
+		}
 	}
 
 	return rv;
