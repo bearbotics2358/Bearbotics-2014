@@ -17,7 +17,7 @@ void Logger::InitLogging(void)
 {
 	if(!init_){
 		try {
-			logFile_.open(fileName_.c_str(), std::ios::out);
+			logFile_.open(fileName_.c_str(), std::ios::app);
 		} catch (std::ofstream::failure& e) {
 			printf("Exception Occurred! %s\n", e.what());
 			error_ = true;
