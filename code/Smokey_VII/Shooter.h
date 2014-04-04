@@ -21,7 +21,7 @@ public:
 	~Shooter(void);
 
 	void Init(bool enable);
-	void UpdateControlLogic(bool shoot, bool noRearm);
+	void UpdateControlLogic(bool shoot, bool noRearm, bool backDrive);
 
 	bool GetVerbose(void);
 	void SetVerbose(bool verbose);

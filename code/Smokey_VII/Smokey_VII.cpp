@@ -195,7 +195,9 @@ void Smokey_VII::TeleopPeriodic(void)
 	shooter_.SetEnabled(angle < 81);
 	if(joystick_.GetRawButton(1) && angle > -5) log_.Log("Shooting");
 	shooter_.UpdateControlLogic(joystick_.GetRawButton(1) && angle > -5,
-									joystick_.GetRawButton(2) && angle > -5);
+									joystick_.GetRawButton(2) && angle > -5,
+									joystick_.GetRawButton(6));
+
 
 	time ++;
 	
@@ -238,7 +240,7 @@ void Smokey_VII::AutonomousPeriodic(void){
 	bool drivn = false;
 	char logTemp[1024];
 	sonars_.periodic();
-	shooter_.UpdateControlLogic(false, false);
+	shooter_.UpdateControlLogic(false, false, false);
 		
 	switch(m_currentState){
 	case kAutonDelay:
@@ -276,7 +278,7 @@ void Smokey_VII::AutonomousPeriodic(void){
 			if(fabs(ap_Aimer->getAngle() - Aimerino::ABOVESHOOT) < 5) {
 				nextState = kAutonShoot;
 				shooter_.SetEnabled(true);
-				shooter_.UpdateControlLogic(true, false);
+				shooter_.UpdateControlLogic(true, false, false);
 				log_.Log("SHOOTING");
 			}
 		}
