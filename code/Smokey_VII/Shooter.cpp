@@ -63,18 +63,27 @@ void Shooter::UpdateControlLogic(bool shoot, bool noRearm, bool backDrive)
 					}
 					break;
 				case SHOOTER_STATE_ARMING:
-					ap_motor->Set(1.0);
 					printf("Arming\n");
-					if(ap_counter->Get() > 0) {
-						nextState = SHOOTER_STATE_IDLE;
+
+					ap_timer->Start();
+					ap_motor->Set(1.0);
+
+					if(ap_counter->Get() > 0 || ap_timer->HasPeriodPassed(5.0)) {
 						printf("ARMED\n");
+
+						nextState = SHOOTER_STATE_IDLE;
+
+						ap_timer->Reset();
+						ap_timer->Stop();
 					}
 					break;
 				case SHOOTER_STATE_NO_REARM:
 					ap_timer->Start();
 					ap_motor->Set(1.0);
+
 					if(ap_timer->HasPeriodPassed(0.5)){
 						nextState = SHOOTER_STATE_IDLE;
+
 						ap_timer->Reset();
 						ap_timer->Stop();
 					}
