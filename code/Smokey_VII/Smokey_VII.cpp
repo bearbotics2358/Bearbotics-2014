@@ -267,7 +267,7 @@ void Smokey_VII::AutonomousPeriodic(void){
 		ap_Aimer->setAngle(Aimerino::ABOVESHOOT, 1.0);
 		sprintf(logTemp, "Sonars: %f", sonars_.GetDistanceFront());
 		log_.Log(logTemp);
-		if(sonars_.GetDistanceFront() > 7.0) { //8.7 = 6'4"
+		if(sonars_.GetDistanceFront() > 9.0) { //8.7 = 6'4"
 			double gyroOffset = gyro_.GetAngle() / 90.0;
 			ap_Drive->SetLeftRightMotorOutputs(0.4 - gyroOffset, -1 * (0.4 + gyroOffset));
 			drivn = true;

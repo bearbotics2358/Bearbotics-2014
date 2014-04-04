@@ -18,9 +18,11 @@ void Logger::InitLogging(void)
 	if(!init_){
 		try {
 			logFile_.open(fileName_.c_str(), std::ios::app);
+			init_ = true;
 		} catch (std::ofstream::failure& e) {
 			printf("Exception Occurred! %s\n", e.what());
 			error_ = true;
+			init_ = false;
 			return;			
 		}
 		Log(">>>>>>>>>>>>>>>>START LOG<<<<<<<<<<<<<<<<", false);
@@ -32,6 +34,7 @@ void Logger::DisableLogging(void)
 	if(init_) {
 		Log(">>>>>>>>>>>>>>>>STOP LOG<<<<<<<<<<<<<<<<", false);
 		logFile_.close();
+		init_ = false;
 	}
 }
 
