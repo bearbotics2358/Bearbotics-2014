@@ -271,7 +271,7 @@ void Smokey_VII::AutonomousPeriodic(void){
 			drivn = true;
 		} else {
 			m_indicator.SetColor(0, 100, 0);
-			if(fabs(ap_Aimer->getAngle() - 50) < 5) {
+			if(fabs(ap_Aimer->getAngle() - Aimerino::ABOVESHOOT) < 5) {
 				nextState = kAutonShoot;
 				shooter_.SetEnabled(true);
 				shooter_.UpdateControlLogic(true, false);
