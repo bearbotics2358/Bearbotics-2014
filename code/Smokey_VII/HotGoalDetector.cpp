@@ -87,7 +87,7 @@ std::vector<Particle> HotGoalDetector::GenerateParticleReport(Image *image)
 
 void HotGoalDetector::FilterParticles(std::vector<Particle> &particles)
 {
-	vector<Particle>::iterator it;
+	std::vector<Particle>::iterator it;
 	for(it = particles.begin(); it != particles.end(); )
 	{
 		Particle p = *it;
@@ -108,7 +108,7 @@ void HotGoalDetector::FilterParticles(std::vector<Particle> &particles)
 
 void HotGoalDetector::PrintParticles(const std::vector<Particle> &particles)
 {
-	vector<Particle>::const_iterator it;
+	std::vector<Particle>::const_iterator it;
 	for(it = particles.begin(); it != particles.end(); ++it)
 	{
 		Particle p = *it;
@@ -118,7 +118,7 @@ void HotGoalDetector::PrintParticles(const std::vector<Particle> &particles)
 
 void HotGoalDetector::LogParticles(const std::vector<Particle> &particles)
 {
-	vector<Particle>::const_iterator it;
+	std::vector<Particle>::const_iterator it;
 	for(it = particles.begin(); it != particles.end(); ++it)
 	{
 		Particle p = *it;
@@ -191,7 +191,7 @@ bool HotGoalDetector::DetectHotGoal(bool snapImage, bool saveImage, bool logRepo
 		LogParticles(particles);
 	}
 
-	vector<Particle>::const_iterator it;
+	std::vector<Particle>::const_iterator it;
 	for(it = particles.begin(); it != particles.end(); ++it)
 	{
 		Particle p = *it;
@@ -209,7 +209,7 @@ bool HotGoalDetector::DetectHotGoal(bool snapImage, bool saveImage, bool logRepo
 			continue;
 		}
 		
-		vector<Particle>::const_iterator it2;
+		std::vector<Particle>::const_iterator it2;
 		for(it2 = particles.begin(); it2 != particles.end(); ++it2)
 		{
 			Particle p2 = *it2;
