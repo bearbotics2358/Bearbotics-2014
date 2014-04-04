@@ -174,11 +174,11 @@ bool HotGoalDetector::DetectHotGoal(bool snapImage, bool saveImage, bool logRepo
 	element.matrixCols = 5;
 	element.hexa = FALSE;
 
-	rval = imaqMorphology(image, image, IMAQ_ERODE, &element);
-	CheckIMAQError(rval, "imaqMorphology (IMAQ_ERODE)");
+	// rval = imaqMorphology(image, image, IMAQ_ERODE, &element);
+	// CheckIMAQError(rval, "imaqMorphology (IMAQ_ERODE)");
 
-	rval = imaqMorphology(image, image, IMAQ_DILATE, &element);
-	CheckIMAQError(rval, "imaqMorphology (IMAQ_DILATE)");
+	// rval = imaqMorphology(image, image, IMAQ_DILATE, &element);
+	// CheckIMAQError(rval, "imaqMorphology (IMAQ_DILATE)");
 
 	rval = imaqEqualize(image, image, 0, 255, NULL);
 	CheckIMAQError(rval, "imaqEqualize");

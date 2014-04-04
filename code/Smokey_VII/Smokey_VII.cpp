@@ -151,6 +151,7 @@ void Smokey_VII::TeleopPeriodic(void)
 	catch(std::runtime_error &ex)
 	{
 		printf("runtime_error: %s\n", ex.what());
+		log_.Log(ex.what());
 	}
 	
 	if(joystick_.GetRawButton(4)) gyro_.Reset();
@@ -250,6 +251,7 @@ void Smokey_VII::AutonomousPeriodic(void){
 				nextState = kAutonWaitForHotZone;
 			}
 		} catch(std::runtime_error &ex) {
+			log_.Log(ex.what());
 			nextState = kAutonDriveAndTilt;
 		}
 		break;
