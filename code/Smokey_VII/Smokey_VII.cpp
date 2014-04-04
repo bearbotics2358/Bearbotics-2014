@@ -241,12 +241,16 @@ void Smokey_VII::AutonomousPeriodic(void){
 		
 	switch(m_currentState){
 	case kAutonDelay:
-		if(detector_.DetectHotGoal(true, true, true) || true) {
+		try {
+			if(detector_.DetectHotGoal(true, true, true) || true) {
+				nextState = kAutonDriveAndTilt;
+			} else {
+				m_timer.Reset();
+				m_timer.Start();
+				nextState = kAutonWaitForHotZone;
+			}
+		} catch(std::runtime_error &ex) {
 			nextState = kAutonDriveAndTilt;
-		} else {
-			m_timer.Reset();
-			m_timer.Start();
-			nextState = kAutonWaitForHotZone;
 		}
 		break;
 	case kAutonWaitForHotZone:

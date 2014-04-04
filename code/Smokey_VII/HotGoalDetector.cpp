@@ -261,6 +261,7 @@ bool HotGoalDetector::DetectHotGoal(bool snapImage, bool saveImage, bool logRepo
 
 			// Fairly certain of a match at this point
 			std::cout << "Found a hot goal!" << std::endl;
+			ap_logger->Log("Found a hot goal!");
 		}
 	}
 
