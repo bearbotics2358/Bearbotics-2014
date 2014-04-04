@@ -83,7 +83,7 @@ void Smokey_VII::TeleopInit(void)
 	sonars_.EnableFrontOnly();
 	sonars_.DisablePort(Sonar::kRightFront);
 	sonars_.RxFlush();
-	log_.InitLogging();
+	// log_.InitLogging();
 	//	ap_Drive->SetInvertedMotor(ap_Drive->kFrontRightMotor, false);
 //	ap_Drive->SetInvertedMotor(ap_Drive->kFrontRightMotor, false);
 //	SmartDashboard::PutNumber("P", 0.054);
@@ -103,7 +103,7 @@ void Smokey_VII::DisabledInit()
 
 void Smokey_VII::TeleopPeriodic(void)
 {
-	log_.SetEnabled(true);
+	log_.SetEnabled(false);
 	char logTemp[1024];
 	
 	static int time = 0;
